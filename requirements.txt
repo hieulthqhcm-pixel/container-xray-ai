@@ -1,7 +1,6 @@
 streamlit
-openai
-pillow
 numpy
+pillow
 opencv-python-headless==4.10.0.84
 
 
