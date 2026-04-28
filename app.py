@@ -3,34 +3,36 @@ import cv2
 import numpy as np
 from PIL import Image
 from datetime import datetime
+import hashlib
 
 st.set_page_config(
-    page_title="Container X-ray Risk Intelligence V3",
+    page_title="Container X-ray Risk Intelligence V3.1",
     layout="wide"
 )
 
-st.title("Container X-ray Risk Intelligence V3")
-st.caption("Phân tích ảnh X-ray container, heatmap mật độ, suy đoán nhóm hàng và đối chiếu Manifest.")
+st.title("Container X-ray Risk Intelligence V3.1")
+st.caption("Phân tích X-ray container, heatmap mật độ, suy đoán nhóm hàng và đối chiếu Manifest.")
 
 manifest = st.text_area(
     "Nhập Manifest / khai báo hàng hóa",
-    placeholder="Ví dụ: ceramic tiles, bricks, machinery, plastic toys, textile, electronics..."
+    placeholder="Ví dụ: ceramic tiles, bricks, machinery, plastic toys, textile, electronics...",
+    key="manifest_input_v31"
 )
 
 uploaded = st.file_uploader(
     "Tải ảnh X-ray container",
-    type=["jpg", "jpeg", "png", "bmp"]
+    type=["jpg", "jpeg", "png", "bmp"],
+    key="xray_upload_v31"
 )
 
 
 def classify_manifest(text):
     text = text.lower()
-
     groups = {
-        "brick": ["brick", "bricks", "gạch", "gach", "ceramic", "tile", "tiles", "stone", "marble", "granite", "cement"],
+        "brick": ["brick", "bricks", "gạch", "gach", "ceramic", "tile", "tiles", "stone", "marble", "granite", "cement", "flowerpot"],
         "machinery": ["machine", "machinery", "equipment", "engine", "motor", "forklift", "steel", "iron", "metal", "tool", "parts"],
         "textile": ["clothes", "garment", "textile", "fabric", "shoes", "cotton", "bag", "bags"],
-        "light": ["plastic", "toy", "toys", "paper", "carton", "foam", "polystyrene"],
+        "light": ["plastic", "toy", "toys", "paper", "carton", "cartons", "foam", "polystyrene"],
         "electronics": ["battery", "lithium", "electronics", "computer", "phone", "adapter", "charger", "circuit"],
         "wood": ["wood", "furniture", "chair", "table", "cabinet", "sofa"],
         "food": ["food", "fruit", "vegetable", "seafood", "meat", "organic"],
@@ -49,13 +51,10 @@ def preprocess_image(img):
     gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 
     h, w = gray.shape
-    crop_margin_x = int(w * 0.04)
-    crop_margin_y = int(h * 0.04)
+    mx = int(w * 0.04)
+    my = int(h * 0.04)
 
-    roi = gray[
-        crop_margin_y:h - crop_margin_y,
-        crop_margin_x:w - crop_margin_x
-    ]
+    roi = gray[my:h - my, mx:w - mx]
 
     clahe = cv2.createCLAHE(clipLimit=2.8, tileGridSize=(8, 8))
     enhanced = clahe.apply(roi)
@@ -67,8 +66,6 @@ def preprocess_image(img):
 
 def create_heatmap(roi):
     norm = cv2.normalize(roi, None, 0, 255, cv2.NORM_MINMAX)
-
-    # Đảo màu: vùng đậm X-ray thành vùng nóng
     inverted = 255 - norm
 
     heat = cv2.applyColorMap(inverted.astype(np.uint8), cv2.COLORMAP_JET)
@@ -85,18 +82,16 @@ def analyze_xray(img):
 
     edges = cv2.Canny(blur, 40, 120)
 
-    edge_ratio = float(np.count_nonzero(edges) / edges.size)
-    mean_density = float(np.mean(roi))
-    std_density = float(np.std(roi))
-
     dark_mask = roi < 75
     very_dark_mask = roi < 45
     bright_mask = roi > 210
 
+    edge_ratio = float(np.count_nonzero(edges) / edges.size)
+    mean_density = float(np.mean(roi))
+    std_density = float(np.std(roi))
     dark_ratio = float(np.count_nonzero(dark_mask) / dark_mask.size)
     very_dark_ratio = float(np.count_nonzero(very_dark_mask) / very_dark_mask.size)
     bright_ratio = float(np.count_nonzero(bright_mask) / bright_mask.size)
-
     lap_var = float(cv2.Laplacian(roi, cv2.CV_64F).var())
 
     kernel = np.ones((5, 5), np.uint8)
@@ -127,13 +122,11 @@ def analyze_xray(img):
 
         x, y, bw, bh = cv2.boundingRect(cnt)
 
-        # Loại nhiễu mép ảnh
         if x < 10 or y < 10 or x + bw > w - 10 or y + bh > h - 10:
             continue
 
         ratio = bw / max(bh, 1)
 
-        # Loại chữ/mép dài mỏng
         if ratio > 8 or ratio < 0.12:
             continue
 
@@ -189,7 +182,6 @@ def predict_cargo_type(a):
         "unknown": 0
     }
 
-    # Gạch/vật liệu xây dựng: thường tương đối đồng đều, ít cạnh phức tạp
     if edge < 0.050:
         scores["brick"] += 28
     if std < 42:
@@ -199,7 +191,6 @@ def predict_cargo_type(a):
     if regions <= 2:
         scores["brick"] += 12
 
-    # Máy móc/kim loại: nhiều cạnh, nhiều vùng đậm, density biến thiên
     if edge > 0.050:
         scores["machinery"] += 25
     if std > 36:
@@ -213,7 +204,6 @@ def predict_cargo_type(a):
     if lap > 260:
         scores["machinery"] += 12
 
-    # Hàng nhẹ/nhựa/carton
     if dark < 0.07:
         scores["light"] += 30
     if std < 32:
@@ -221,13 +211,11 @@ def predict_cargo_type(a):
     if bright > 0.25:
         scores["light"] += 15
 
-    # Dệt may
     if dark < 0.10 and 30 <= std <= 55:
         scores["textile"] += 25
     if 0.030 <= edge <= 0.075:
         scores["textile"] += 20
 
-    # Điện tử/pin/linh kiện
     if very_dark > 0.025:
         scores["electronics"] += 25
     if regions >= 4:
@@ -237,15 +225,12 @@ def predict_cargo_type(a):
     if dark > 0.16:
         scores["electronics"] += 12
 
-    # Gỗ/nội thất
     if 0.045 <= edge <= 0.090 and 35 <= std <= 60 and dark < 0.16:
         scores["wood"] += 30
 
-    # Thực phẩm/hữu cơ
     if dark < 0.11 and 35 <= std <= 65 and bright < 0.35:
         scores["food"] += 18
 
-    # Hàng hỗn hợp
     if edge > 0.070 and std > 43:
         scores["mixed"] += 35
     if dark > 0.15 and bright > 0.12:
@@ -256,15 +241,14 @@ def predict_cargo_type(a):
         scores["mixed"] += 15
 
     predicted = max(scores, key=scores.get)
-    confidence = scores[predicted]
 
-    if confidence < 35:
+    if scores[predicted] < 35:
         predicted = "unknown"
 
     return predicted, scores
 
 
-def calculate_risk(manifest_groups, predicted_type, cargo_scores, a):
+def calculate_risk(manifest_groups, predicted_type, a):
     risks = []
     recommendations = []
     risk_score = 0
@@ -281,9 +265,9 @@ def calculate_risk(manifest_groups, predicted_type, cargo_scores, a):
     manifest_unknown = "unknown" in manifest_groups
 
     if manifest_unknown:
-        risks.append("Manifest chưa xác định rõ nhóm hàng. Cần nhập mô tả cụ thể hơn.")
+        risks.append("Manifest chưa xác định rõ nhóm hàng.")
         risk_score += 20
-        recommendations.append("Bổ sung tên hàng chi tiết, số lượng, chất liệu, công dụng, HS code nếu có.")
+        recommendations.append("Bổ sung mô tả hàng hóa chi tiết hơn.")
 
     if predicted_type != "unknown" and not manifest_unknown and predicted_type not in manifest_groups:
         risks.append(f"AI suy đoán ảnh giống nhóm '{predicted_type}' nhưng Manifest khai {manifest_groups}.")
@@ -293,28 +277,28 @@ def calculate_risk(manifest_groups, predicted_type, cargo_scores, a):
     heavy_image_sign = predicted_type in ["machinery", "electronics", "mixed"] or dark > 0.11 or edge > 0.055
 
     if low_density_declared and heavy_image_sign:
-        risks.append("Manifest khai nhóm hàng có tính đồng đều/nhẹ hơn, nhưng ảnh có dấu hiệu hàng đặc, kim loại hoặc cấu trúc phức tạp.")
+        risks.append("Manifest khai hàng đồng đều/nhẹ hơn, nhưng ảnh có dấu hiệu hàng đặc, kim loại hoặc cấu trúc phức tạp.")
         risk_score += 35
-        recommendations.append("Kiểm tra trực quan ảnh X-ray, đối chiếu trọng lượng, kích thước kiện và chứng từ.")
+        recommendations.append("Nên đối chiếu trọng lượng, kích thước kiện, chứng từ và ảnh X-ray.")
 
     if "brick" in manifest_groups:
         if edge > 0.050:
-            risks.append("Khai gạch/vật liệu xây dựng nhưng ảnh có nhiều cấu trúc cạnh hơn mức kỳ vọng của hàng xếp đều.")
+            risks.append("Khai gạch/vật liệu xây dựng nhưng ảnh có nhiều cấu trúc cạnh hơn mức kỳ vọng.")
             risk_score += 18
         if std > 42:
-            risks.append("Khai gạch nhưng mật độ ảnh biến thiên cao, không giống hàng đồng nhất.")
+            risks.append("Khai gạch nhưng mật độ ảnh biến thiên cao.")
             risk_score += 20
         if dark > 0.12:
-            risks.append("Khai gạch nhưng có vùng hấp thụ tia X mạnh, cần kiểm tra khả năng lẫn hàng kim loại/máy móc.")
+            risks.append("Khai gạch nhưng có vùng hấp thụ tia X mạnh.")
             risk_score += 22
 
     if "machinery" not in manifest_groups and predicted_type == "machinery":
         risks.append("Manifest không khai máy móc nhưng ảnh có đặc trưng máy móc/kim loại.")
         risk_score += 35
-        recommendations.append("Đề xuất kiểm tra thực tế hoặc soi chiếu bổ sung ở góc khác.")
+        recommendations.append("Đề xuất kiểm tra thực tế hoặc soi chiếu bổ sung.")
 
-    if "electronics" not in manifest_groups and (very_dark > 0.035 and regions >= 3):
-        risks.append("Có nhiều cụm đậm nhỏ, cần lưu ý khả năng linh kiện, pin hoặc hàng đặc không khai báo.")
+    if "electronics" not in manifest_groups and very_dark > 0.035 and regions >= 3:
+        risks.append("Có nhiều cụm đậm nhỏ, cần lưu ý khả năng linh kiện/pin/hàng đặc.")
         risk_score += 25
 
     if large_regions >= 2:
@@ -322,11 +306,11 @@ def calculate_risk(manifest_groups, predicted_type, cargo_scores, a):
         risk_score += 18
 
     if region_area_ratio > 0.18:
-        risks.append("Tổng diện tích vùng đậm lớn so với ảnh, cần kiểm tra hàng đặc hoặc hàng che giấu.")
+        risks.append("Tổng diện tích vùng đậm lớn so với ảnh.")
         risk_score += 18
 
     if bright > 0.45:
-        risks.append("Ảnh có nhiều vùng sáng/rỗng, cần kiểm tra bố trí hàng hoặc khả năng khai thiếu hàng.")
+        risks.append("Ảnh có nhiều vùng sáng/rỗng, cần kiểm tra bố trí hàng.")
         risk_score += 12
 
     if not risks:
@@ -346,14 +330,14 @@ def calculate_risk(manifest_groups, predicted_type, cargo_scores, a):
     if risk_score >= 75:
         recommendations.append("Ưu tiên kiểm tra thực tế hoặc soi chiếu lại với góc khác.")
     elif risk_score >= 45:
-        recommendations.append("Cần cán bộ soi chiếu rà soát kỹ các vùng đậm và đối chiếu chứng từ.")
+        recommendations.append("Cần rà soát kỹ các vùng đậm và đối chiếu chứng từ.")
     else:
         recommendations.append("Có thể xử lý theo luồng bình thường nếu các thông tin khác phù hợp.")
 
     return risk_score, level, risks, recommendations
 
 
-def level_badge(level):
+def show_level(level):
     if level == "RỦI RO CAO":
         st.error(level)
     elif level == "RỦI RO TRUNG BÌNH":
@@ -362,7 +346,13 @@ def level_badge(level):
         st.success(level)
 
 
-if uploaded:
+if uploaded is not None:
+    file_bytes = uploaded.getvalue()
+    file_hash = hashlib.md5(file_bytes).hexdigest()
+
+    st.info(f"Đang phân tích file: {uploaded.name}")
+    st.caption(f"Mã ảnh hiện tại: {file_hash[:10]}")
+
     image = Image.open(uploaded).convert("RGB")
     img = np.array(image)
 
@@ -372,7 +362,6 @@ if uploaded:
     risk_score, level, risks, recommendations = calculate_risk(
         manifest_groups,
         predicted_type,
-        cargo_scores,
         analysis
     )
 
@@ -407,7 +396,7 @@ if uploaded:
 
     st.subheader("6. Đánh giá rủi ro")
     st.metric("Risk Score", f"{risk_score}/100")
-    level_badge(level)
+    show_level(level)
 
     st.subheader("7. Lý do đánh giá")
     for r in risks:
@@ -424,6 +413,5 @@ if uploaded:
     st.image(analysis["edges"], width="stretch", clamp=True)
 
     st.caption(f"Báo cáo tạo lúc: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-
 else:
     st.info("Nhập Manifest và tải ảnh X-ray container để bắt đầu phân tích.")
