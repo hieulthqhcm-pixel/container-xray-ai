@@ -4,12 +4,12 @@ import numpy as np
 from PIL import Image
 
 st.set_page_config(
-    page_title="AI phân tích X-ray container + Manifest",
+    page_title="AI X-ray Container Risk Analyzer",
     layout="wide"
 )
 
 st.title("AI phân tích X-ray container và đối chiếu Manifest")
-st.caption("Bản hỗ trợ nghiệp vụ: phân tích mật độ, cấu trúc, độ đồng nhất và so sánh khai báo hàng hóa.")
+st.caption("Phiên bản nâng cấp: phân tích mật độ, cấu trúc, độ đồng nhất và suy đoán nhóm hàng.")
 
 manifest = st.text_area(
     "Nhập Manifest / khai báo hàng hóa",
@@ -21,36 +21,18 @@ uploaded = st.file_uploader(
     type=["jpg", "jpeg", "png", "bmp"]
 )
 
-def keyword_group(text):
+
+def classify_manifest(text):
     text = text.lower()
 
     groups = {
-        "Gạch / đá / vật liệu xây dựng": [
-            "brick", "bricks", "gạch", "ceramic", "tile", "tiles",
-            "stone", "marble", "granite", "cement"
-        ],
-        "Máy móc / thiết bị / kim loại": [
-            "machine", "machinery", "equipment", "engine", "motor",
-            "forklift", "steel", "iron", "metal", "tool", "parts"
-        ],
-        "Dệt may / hàng mềm": [
-            "clothes", "garment", "textile", "fabric", "shoes",
-            "bag", "bags", "cotton"
-        ],
-        "Nhựa / đồ chơi / hàng nhẹ": [
-            "plastic", "toy", "toys", "paper", "carton", "foam",
-            "polystyrene"
-        ],
-        "Điện tử / pin / linh kiện": [
-            "battery", "lithium", "electronics", "computer", "phone",
-            "circuit", "adapter", "charger"
-        ],
-        "Nội thất / gỗ": [
-            "furniture", "wood", "chair", "table", "cabinet", "sofa"
-        ],
-        "Thực phẩm / hữu cơ": [
-            "food", "fruit", "vegetable", "seafood", "meat", "organic"
-        ]
+        "brick": ["brick", "bricks", "gạch", "ceramic", "tile", "tiles", "stone", "marble", "granite"],
+        "machinery": ["machine", "machinery", "equipment", "engine", "motor", "forklift", "steel", "iron", "metal", "tool"],
+        "textile": ["clothes", "garment", "textile", "fabric", "shoes", "cotton", "bag"],
+        "light": ["plastic", "toy", "toys", "paper", "carton", "foam", "polystyrene"],
+        "electronics": ["battery", "lithium", "electronics", "computer", "phone", "adapter", "charger"],
+        "wood": ["wood", "furniture", "chair", "table", "cabinet", "sofa"],
+        "food": ["food", "fruit", "vegetable", "seafood", "meat", "organic"]
     }
 
     matched = []
@@ -59,82 +41,77 @@ def keyword_group(text):
         if any(w in text for w in words):
             matched.append(group)
 
-    if not matched:
-        matched.append("Không xác định rõ nhóm hàng")
-
-    return matched
+    return matched if matched else ["unknown"]
 
 
-def analyze_xray(img):
+def analyze_image(img):
     gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 
-    # Tăng tương phản
-    clahe = cv2.createCLAHE(clipLimit=2.5, tileGridSize=(8, 8))
+    clahe = cv2.createCLAHE(clipLimit=2.8, tileGridSize=(8, 8))
     enhanced = clahe.apply(gray)
 
-    # Cạnh ảnh
     blur = cv2.GaussianBlur(enhanced, (5, 5), 0)
-    edges = cv2.Canny(blur, 50, 150)
+
+    edges = cv2.Canny(blur, 40, 120)
     edge_ratio = np.count_nonzero(edges) / edges.size
 
-    # Mật độ và độ biến thiên
     mean_density = float(np.mean(gray))
     std_density = float(np.std(gray))
 
-    # Vùng đậm
-    dark_mask = gray < 70
-    dark_ratio = float(np.count_nonzero(dark_mask) / dark_mask.size)
-
-    # Vùng sáng/rỗng
+    dark_mask = gray < 75
+    very_dark_mask = gray < 45
     bright_mask = gray > 210
-    bright_ratio = float(np.count_nonzero(bright_mask) / bright_mask.size)
 
-    # Tìm contour vùng đậm nghi vấn
+    dark_ratio = np.count_nonzero(dark_mask) / dark_mask.size
+    very_dark_ratio = np.count_nonzero(very_dark_mask) / very_dark_mask.size
+    bright_ratio = np.count_nonzero(bright_mask) / bright_mask.size
+
+    lap_var = cv2.Laplacian(gray, cv2.CV_64F).var()
+
     kernel = np.ones((5, 5), np.uint8)
-    clean = cv2.morphologyEx(dark_mask.astype(np.uint8) * 255, cv2.MORPH_CLOSE, kernel)
+    dark_clean = cv2.morphologyEx(
+        dark_mask.astype(np.uint8) * 255,
+        cv2.MORPH_CLOSE,
+        kernel,
+        iterations=2
+    )
 
-    contours, _ = cv2.findContours(clean, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours, _ = cv2.findContours(
+        dark_clean,
+        cv2.RETR_EXTERNAL,
+        cv2.CHAIN_APPROX_SIMPLE
+    )
 
     result = img.copy()
     suspicious_regions = 0
+    large_dark_regions = 0
+    region_areas = []
 
     for cnt in contours:
         area = cv2.contourArea(cnt)
 
-        if area > 1000:
-            x, y, w, h = cv2.boundingRect(cnt)
+        if area > 800:
             suspicious_regions += 1
+            region_areas.append(area)
+
+            x, y, w, h = cv2.boundingRect(cnt)
+
+            if area > 3000:
+                large_dark_regions += 1
+
             cv2.rectangle(result, (x, y), (x + w, y + h), (255, 0, 0), 3)
             cv2.putText(
                 result,
                 "NGHI VAN",
-                (x, max(y - 10, 20)),
+                (x, max(y - 8, 20)),
                 cv2.FONT_HERSHEY_SIMPLEX,
-                0.7,
+                0.65,
                 (255, 0, 0),
                 2
             )
 
-    # Phân loại đặc trưng ảnh
-    image_features = []
-
-    if edge_ratio > 0.09:
-        image_features.append("Cấu trúc phức tạp, nhiều đường biên - giống máy móc/thiết bị/hàng hỗn hợp")
-
-    if std_density > 55:
-        image_features.append("Mật độ biến thiên cao - hàng không đồng nhất")
-
-    if dark_ratio > 0.18:
-        image_features.append("Nhiều vùng đậm - nghi kim loại, máy móc hoặc vật thể đặc")
-
-    if bright_ratio > 0.35:
-        image_features.append("Nhiều vùng rỗng/sáng - cần kiểm tra khoảng trống bất thường")
-
-    if edge_ratio < 0.045 and std_density < 38:
-        image_features.append("Cấu trúc tương đối đồng đều - gần với gạch, vật liệu xây dựng, hàng xếp đều")
-
-    if not image_features:
-        image_features.append("Ảnh chưa có dấu hiệu đặc biệt rõ")
+    region_area_sum = float(sum(region_areas)) if region_areas else 0.0
+    region_area_ratio = region_area_sum / (gray.shape[0] * gray.shape[1])
 
     return {
         "gray": gray,
@@ -145,97 +122,182 @@ def analyze_xray(img):
         "mean_density": mean_density,
         "std_density": std_density,
         "dark_ratio": dark_ratio,
+        "very_dark_ratio": very_dark_ratio,
         "bright_ratio": bright_ratio,
+        "lap_var": lap_var,
         "suspicious_regions": suspicious_regions,
-        "features": image_features
+        "large_dark_regions": large_dark_regions,
+        "region_area_ratio": region_area_ratio
     }
 
 
-def compare_manifest(manifest_text, groups, analysis):
+def predict_cargo_type(a):
+    edge = a["edge_ratio"]
+    std = a["std_density"]
+    dark = a["dark_ratio"]
+    very_dark = a["very_dark_ratio"]
+    bright = a["bright_ratio"]
+    regions = a["suspicious_regions"]
+    large_regions = a["large_dark_regions"]
+    lap = a["lap_var"]
+
+    scores = {
+        "brick": 0,
+        "machinery": 0,
+        "textile": 0,
+        "light": 0,
+        "electronics": 0,
+        "wood": 0,
+        "mixed": 0
+    }
+
+    # Gạch / vật liệu xây dựng: thường đồng đều, dạng khối, ít cấu trúc nhỏ
+    if edge < 0.055:
+        scores["brick"] += 30
+    if std < 42:
+        scores["brick"] += 25
+    if dark < 0.16:
+        scores["brick"] += 15
+    if regions <= 2:
+        scores["brick"] += 15
+
+    # Máy móc / kim loại: nhiều cạnh, nhiều vùng đậm, mật độ biến thiên
+    if edge > 0.055:
+        scores["machinery"] += 25
+    if std > 38:
+        scores["machinery"] += 25
+    if dark > 0.10:
+        scores["machinery"] += 25
+    if regions >= 2:
+        scores["machinery"] += 20
+    if large_regions >= 1:
+        scores["machinery"] += 15
+
+    # Hàng nhẹ: ít vùng đậm, mật độ thấp, tương đối sáng
+    if dark < 0.08:
+        scores["light"] += 35
+    if std < 35:
+        scores["light"] += 20
+    if bright > 0.25:
+        scores["light"] += 15
+
+    # Dệt may: ít kim loại nhưng texture mềm, không quá đồng nhất
+    if dark < 0.10 and 30 <= std <= 55:
+        scores["textile"] += 30
+    if 0.035 <= edge <= 0.08:
+        scores["textile"] += 20
+
+    # Điện tử/pin: nhiều cụm đậm nhỏ, cạnh tương đối cao
+    if very_dark > 0.03:
+        scores["electronics"] += 25
+    if regions >= 4:
+        scores["electronics"] += 25
+    if edge > 0.06:
+        scores["electronics"] += 15
+
+    # Hàng hỗn hợp
+    if edge > 0.075 and std > 45 and regions >= 3:
+        scores["mixed"] += 45
+    if dark > 0.18 and bright > 0.15:
+        scores["mixed"] += 20
+    if lap > 350:
+        scores["mixed"] += 15
+
+    predicted = max(scores, key=scores.get)
+    confidence = scores[predicted]
+
+    if confidence < 35:
+        predicted = "unknown"
+
+    return predicted, scores
+
+
+def compare_manifest(manifest_groups, predicted_type, scores, a):
     risks = []
-    score = 0
+    risk_score = 0
 
-    text = manifest_text.lower()
+    edge = a["edge_ratio"]
+    std = a["std_density"]
+    dark = a["dark_ratio"]
+    very_dark = a["very_dark_ratio"]
+    regions = a["suspicious_regions"]
+    large_regions = a["large_dark_regions"]
 
-    declared_brick = "Gạch / đá / vật liệu xây dựng" in groups
-    declared_machine = "Máy móc / thiết bị / kim loại" in groups
-    declared_soft = "Dệt may / hàng mềm" in groups
-    declared_light = "Nhựa / đồ chơi / hàng nhẹ" in groups
-    declared_electronic = "Điện tử / pin / linh kiện" in groups
-    declared_wood = "Nội thất / gỗ" in groups
+    if "unknown" in manifest_groups:
+        risks.append("Manifest chưa xác định rõ nhóm hàng, cần nhập mô tả cụ thể hơn.")
+        risk_score += 20
 
-    edge = analysis["edge_ratio"]
-    std = analysis["std_density"]
-    dark = analysis["dark_ratio"]
-    bright = analysis["bright_ratio"]
-    regions = analysis["suspicious_regions"]
+    if predicted_type != "unknown" and predicted_type not in manifest_groups:
+        risks.append(
+            f"AI suy đoán ảnh giống nhóm '{predicted_type}' nhưng Manifest khai {manifest_groups}."
+        )
+        risk_score += 55
 
-    if manifest_text.strip() == "":
-        risks.append("Chưa nhập Manifest nên chưa thể đối chiếu khai báo.")
-        score += 20
+    if "brick" in manifest_groups:
+        if predicted_type in ["machinery", "electronics", "mixed"]:
+            risks.append("Manifest khai gạch/vật liệu xây dựng nhưng ảnh có đặc trưng không đồng nhất, giống máy móc/hàng hỗn hợp.")
+            risk_score += 35
+        if edge > 0.055:
+            risks.append("Ảnh có nhiều cạnh/cấu trúc hơn mức thường gặp của hàng gạch xếp đều.")
+            risk_score += 20
+        if dark > 0.12:
+            risks.append("Ảnh có vùng đậm đáng kể, không phù hợp với khai báo gạch thông thường.")
+            risk_score += 20
+        if regions >= 2:
+            risks.append("Có nhiều vùng đậm được khoanh, cần kiểm tra khả năng hàng khác lẫn trong container.")
+            risk_score += 20
 
-    if declared_brick:
-        if edge > 0.075 or std > 50:
-            risks.append("Manifest khai gạch/vật liệu xây dựng nhưng ảnh có cấu trúc phức tạp, không giống hàng xếp đều.")
-            score += 35
-        if dark > 0.20:
-            risks.append("Manifest khai gạch nhưng ảnh có nhiều vùng đậm, cần kiểm tra khả năng lẫn kim loại/máy móc.")
-            score += 25
+    if "light" in manifest_groups or "textile" in manifest_groups:
+        if dark > 0.10:
+            risks.append("Manifest khai hàng nhẹ/hàng mềm nhưng ảnh có tỷ lệ vùng đậm cao.")
+            risk_score += 25
+        if predicted_type in ["machinery", "electronics", "mixed"]:
+            risks.append("Ảnh có đặc trưng giống hàng đặc/máy móc, không phù hợp khai báo hàng nhẹ.")
+            risk_score += 35
 
-    if declared_soft or declared_light:
-        if dark > 0.15:
-            risks.append("Manifest khai hàng nhẹ/hàng mềm nhưng ảnh có nhiều vùng đậm, nghi hàng đặc hoặc kim loại.")
-            score += 30
-        if edge > 0.08:
-            risks.append("Manifest khai hàng nhẹ/hàng mềm nhưng ảnh có nhiều cấu trúc cạnh phức tạp.")
-            score += 25
+    if "machinery" not in manifest_groups:
+        if predicted_type == "machinery":
+            risks.append("Manifest không khai máy móc nhưng ảnh có đặc trưng máy móc/kim loại.")
+            risk_score += 35
 
-    if not declared_machine:
-        if edge > 0.11 and std > 55:
-            risks.append("Manifest không khai máy móc nhưng ảnh có đặc trưng giống máy móc/thiết bị/hàng hỗn hợp.")
-            score += 35
+    if "electronics" not in manifest_groups:
+        if very_dark > 0.035 and regions >= 3:
+            risks.append("Có nhiều cụm đậm nhỏ, cần lưu ý khả năng linh kiện/pin/hàng đặc không khai báo.")
+            risk_score += 25
 
-    if not declared_electronic:
-        if dark > 0.22 and regions >= 3:
-            risks.append("Ảnh có nhiều khối đậm lặp lại, cần kiểm tra khả năng linh kiện/pin/hàng đặc không khai báo.")
-            score += 25
-
-    if declared_machine:
-        if edge < 0.04 and std < 35:
-            risks.append("Manifest khai máy móc nhưng ảnh khá đồng đều, cần đối chiếu lại mô tả hàng.")
-            score += 20
-
-    if bright > 0.45:
-        risks.append("Ảnh có nhiều khoảng sáng/rỗng, cần kiểm tra khả năng thiếu hàng hoặc bố trí bất thường.")
-        score += 15
-
-    if regions >= 5:
-        risks.append("Có nhiều vùng đậm nghi vấn được khoanh vùng tự động.")
-        score += 20
+    if large_regions >= 2:
+        risks.append("Có nhiều vùng đậm lớn, cần kiểm tra thủ công.")
+        risk_score += 15
 
     if not risks:
         risks.append("Chưa phát hiện mâu thuẫn rõ, nhưng vẫn cần cán bộ kiểm tra trực quan.")
-        score += 5
+        risk_score = 10
 
-    score = min(score, 100)
+    risk_score = min(risk_score, 100)
 
-    if score >= 70:
+    if risk_score >= 70:
         level = "RỦI RO CAO"
-    elif score >= 40:
+    elif risk_score >= 40:
         level = "RỦI RO TRUNG BÌNH"
     else:
         level = "RỦI RO THẤP"
 
-    return score, level, risks
+    return risk_score, level, risks
 
 
 if uploaded:
     image = Image.open(uploaded).convert("RGB")
     img = np.array(image)
 
-    groups = keyword_group(manifest)
-    analysis = analyze_xray(img)
-    score, level, risks = compare_manifest(manifest, groups, analysis)
+    manifest_groups = classify_manifest(manifest)
+    analysis = analyze_image(img)
+    predicted_type, cargo_scores = predict_cargo_type(analysis)
+    risk_score, level, risks = compare_manifest(
+        manifest_groups,
+        predicted_type,
+        cargo_scores,
+        analysis
+    )
 
     st.subheader("1. Ảnh gốc")
     st.image(img, width="stretch")
@@ -243,36 +305,38 @@ if uploaded:
     st.subheader("2. Ảnh khoanh vùng nghi vấn")
     st.image(analysis["result"], width="stretch")
 
-    st.subheader("3. Kết quả phân tích ảnh X-ray")
+    st.subheader("3. Chỉ số kỹ thuật ảnh X-ray")
 
     col1, col2 = st.columns(2)
 
     with col1:
-        st.metric("Chỉ số cạnh ảnh", f"{analysis['edge_ratio']:.3f}")
+        st.metric("Chỉ số cạnh/cấu trúc", f"{analysis['edge_ratio']:.3f}")
         st.metric("Độ biến thiên mật độ", f"{analysis['std_density']:.1f}")
         st.metric("Tỷ lệ vùng đậm", f"{analysis['dark_ratio']:.2%}")
+        st.metric("Tỷ lệ vùng rất đậm", f"{analysis['very_dark_ratio']:.2%}")
 
     with col2:
         st.metric("Mật độ trung bình", f"{analysis['mean_density']:.1f}")
-        st.metric("Tỷ lệ vùng sáng/rỗng", f"{analysis['bright_ratio']:.2%}")
-        st.metric("Vùng đậm nghi vấn", analysis["suspicious_regions"])
+        st.metric("Vùng sáng/rỗng", f"{analysis['bright_ratio']:.2%}")
+        st.metric("Số vùng nghi vấn", analysis["suspicious_regions"])
+        st.metric("Vùng đậm lớn", analysis["large_dark_regions"])
 
-    st.subheader("4. Đặc trưng ảnh AI nhận thấy")
-    for f in analysis["features"]:
-        st.info(f)
+    st.subheader("4. AI suy đoán nhóm hàng từ ảnh")
+    st.write(f"### Nhóm hàng ảnh giống nhất: `{predicted_type}`")
+
+    st.write("Điểm nhận dạng từng nhóm:")
+    st.json(cargo_scores)
 
     st.subheader("5. Nhóm hàng theo Manifest")
-    for g in groups:
-        st.write(f"- {g}")
+    st.write(manifest_groups)
 
     st.subheader("6. Đối chiếu Manifest")
-
-    st.metric("Điểm rủi ro", f"{score}/100")
+    st.metric("Điểm rủi ro", f"{risk_score}/100")
     st.write(f"### Mức đánh giá: {level}")
 
-    if score >= 70:
-        st.error("Cảnh báo rủi ro cao. Nên kiểm tra thủ công/soi chiếu bổ sung.")
-    elif score >= 40:
+    if risk_score >= 70:
+        st.error("Rủi ro cao. Nên kiểm tra thủ công/soi chiếu bổ sung.")
+    elif risk_score >= 40:
         st.warning("Có dấu hiệu cần lưu ý. Nên kiểm tra thêm.")
     else:
         st.success("Rủi ro thấp theo các chỉ số hiện tại.")
@@ -284,8 +348,8 @@ if uploaded:
     st.subheader("8. Ảnh tăng tương phản")
     st.image(analysis["enhanced"], width="stretch", clamp=True)
 
-    st.subheader("9. Ảnh cạnh cấu trúc")
+    st.subheader("9. Ảnh cạnh/cấu trúc")
     st.image(analysis["edges"], width="stretch", clamp=True)
 
 else:
-    st.info("Vui lòng nhập Manifest và tải ảnh X-ray container để bắt đầu phân tích.")
+    st.info("Nhập Manifest và tải ảnh X-ray container để bắt đầu phân tích.")
