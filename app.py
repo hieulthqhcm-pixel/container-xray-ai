@@ -1,142 +1,198 @@
 import streamlit as st
-from openai import OpenAI
 from PIL import Image
+import numpy as np
+import cv2
 import base64
-import json
-from io import BytesIO
-from datetime import datetime
+from openai import OpenAI
 
-st.set_page_config(page_title="Container X-ray V4 Professional", layout="wide")
+# =========================
+# PAGE CONFIG
+# =========================
+st.set_page_config(page_title="Container X-ray AI V4", layout="wide")
 
-st.title("Container X-ray Risk Intelligence V4 Professional")
-st.caption("AI Vision phân tích ảnh X-ray, đối chiếu Manifest và xuất nhận định rủi ro.")
+st.title("Container X-ray Intelligence V4 Professional")
+st.caption("AI Vision phân tích ảnh X-ray container & đối chiếu Manifest")
 
-client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+# =========================
+# OPENAI CLIENT
+# =========================
+client = OpenAI(
+    api_key=st.secrets["OPENAI_API_KEY"]
+)
 
+# =========================
+# INPUT
+# =========================
 manifest = st.text_area(
     "Nhập Manifest / khai báo hàng hóa",
-    placeholder="Ví dụ: TOTAL:864 CARTONS CERAMIC FLOWERPOT HS CODE:691390"
+    height=180,
+    placeholder="Ví dụ:\nTOTAL:864 CARTONS CERAMIC FLOWERPOT HS CODE:691390"
 )
 
-uploaded = st.file_uploader(
+uploaded_file = st.file_uploader(
     "Tải ảnh X-ray container",
-    type=["jpg", "jpeg", "png", "bmp"]
+    type=["jpg", "jpeg", "png"]
 )
 
-def image_to_base64(image):
-    buffer = BytesIO()
-    image.save(buffer, format="JPEG")
-    return base64.b64encode(buffer.getvalue()).decode("utf-8")
+# =========================
+# IMAGE TO BASE64
+# =========================
+def image_to_base64(img):
+    import io
+    buffered = io.BytesIO()
+    img.save(buffered, format="JPEG")
+    return base64.b64encode(buffered.getvalue()).decode()
 
+# =========================
+# AI ANALYSIS
+# =========================
 def analyze_with_ai(image, manifest_text):
-    img_b64 = image_to_base64(image)
+
+    base64_image = image_to_base64(image)
 
     prompt = f"""
-Bạn là hệ thống hỗ trợ phân tích ảnh soi chiếu X-ray container cho mục đích đối chiếu Manifest.
+Bạn là chuyên gia soi chiếu container Hải quan.
 
-Yêu cầu:
-1. Quan sát ảnh X-ray.
-2. Mô tả hàng hóa nhìn thấy trong ảnh.
-3. Suy đoán nhóm hàng từ ảnh.
-4. Đọc Manifest người dùng nhập.
-5. So sánh ảnh với Manifest.
-6. Chấm điểm rủi ro từ 0 đến 100.
-7. Không kết luận chắc chắn hàng cấm. Chỉ nêu dấu hiệu nghi vấn cần kiểm tra.
-8. Trả lời bằng JSON hợp lệ, không markdown.
+NHIỆM VỤ:
+
+1. Phân tích ảnh X-ray container thực tế.
+2. Xác định:
+- hàng đồng nhất hay không
+- có cấu trúc máy móc/kim loại không
+- mật độ hàng
+- vùng bất thường
+- khả năng che giấu
+- khả năng sai khai báo Manifest
+
+3. So sánh THỰC TẾ ảnh với manifest.
 
 Manifest:
 {manifest_text}
 
-Schema JSON:
-{{
-  "image_description": "...",
-  "image_cargo_guess": ["..."],
-  "manifest_goods": ["..."],
-  "match_assessment": "...",
-  "risk_score": 0,
-  "risk_level": "LOW/MEDIUM/HIGH",
-  "risk_reasons": ["..."],
-  "recommended_actions": ["..."],
-  "confidence": "LOW/MEDIUM/HIGH"
-}}
+YÊU CẦU RẤT QUAN TRỌNG:
+
+- KHÔNG đoán bừa.
+- Chỉ kết luận theo hình ảnh thực tế.
+- Nếu manifest khai gạch/ceramic nhưng ảnh KHÔNG giống gạch đồng nhất -> phải cảnh báo.
+- Nếu ảnh có máy móc/kim loại/cấu trúc cơ khí -> phải nêu rõ.
+- Nếu không đủ cơ sở -> nói "không đủ cơ sở kết luận".
+- Không được copy kết quả cũ.
+- Phải đánh giá đúng theo từng ảnh mới upload.
+
+TRẢ KẾT QUẢ:
+- Nhóm hàng ảnh giống nhất
+- Mức độ phù hợp manifest
+- Điểm rủi ro 0-100
+- Nhận định chuyên sâu
+- Khuyến nghị kiểm tra
 """
 
     response = client.responses.create(
-        model="gpt-5.5",
+        model="gpt-4.1-mini",
         input=[
             {
                 "role": "user",
                 "content": [
-                    {"type": "input_text", "text": prompt},
+                    {
+                        "type": "input_text",
+                        "text": prompt
+                    },
                     {
                         "type": "input_image",
-                        "image_url": f"data:image/jpeg;base64,{img_b64}"
+                        "image_url": f"data:image/jpeg;base64,{base64_image}"
                     }
                 ]
             }
-        ],
+        ]
     )
 
-    text = response.output_text.strip()
+    return response.output_text
 
-    try:
-        return json.loads(text)
-    except Exception:
-        return {
-            "image_description": text,
-            "image_cargo_guess": [],
-            "manifest_goods": [],
-            "match_assessment": "Không parse được JSON.",
-            "risk_score": 50,
-            "risk_level": "MEDIUM",
-            "risk_reasons": ["AI trả về kết quả không đúng định dạng JSON."],
-            "recommended_actions": ["Kiểm tra thủ công và chạy lại ảnh rõ hơn."],
-            "confidence": "LOW"
-        }
+# =========================
+# IMAGE ANALYSIS
+# =========================
+def image_metrics(image):
 
-if uploaded:
-    image = Image.open(uploaded).convert("RGB")
+    img = np.array(image.convert("L"))
 
-    st.subheader("1. Ảnh X-ray")
-    st.image(image, width="stretch")
+    mean = np.mean(img)
+    std = np.std(img)
 
-    if st.button("Phân tích bằng AI Vision"):
-        with st.spinner("AI Vision đang phân tích ảnh và Manifest..."):
-            result = analyze_with_ai(image, manifest)
+    dark_ratio = np.sum(img < 60) / img.size * 100
+    very_dark_ratio = np.sum(img < 30) / img.size * 100
+    bright_ratio = np.sum(img > 210) / img.size * 100
 
-        st.subheader("2. Mô tả ảnh")
-        st.write(result.get("image_description", ""))
+    edges = cv2.Canny(img, 50, 150)
+    edge_density = np.sum(edges > 0) / edges.size
 
-        st.subheader("3. Nhóm hàng AI suy đoán từ ảnh")
-        st.write(result.get("image_cargo_guess", []))
+    return {
+        "mean": round(mean, 2),
+        "std": round(std, 2),
+        "dark_ratio": round(dark_ratio, 2),
+        "very_dark_ratio": round(very_dark_ratio, 2),
+        "bright_ratio": round(bright_ratio, 2),
+        "edge_density": round(edge_density, 4)
+    }
 
-        st.subheader("4. Nhóm hàng theo Manifest")
-        st.write(result.get("manifest_goods", []))
+# =========================
+# MAIN
+# =========================
+if uploaded_file:
 
-        st.subheader("5. Đánh giá khớp Manifest")
-        st.write(result.get("match_assessment", ""))
+    image = Image.open(uploaded_file)
 
-        st.subheader("6. Risk Score")
-        score = int(result.get("risk_score", 0))
-        level = result.get("risk_level", "MEDIUM")
+    st.subheader("1. Ảnh gốc")
+    st.image(image, use_container_width=True)
 
-        st.metric("Điểm rủi ro", f"{score}/100")
+    # -------------------------
+    # TECHNICAL ANALYSIS
+    # -------------------------
+    metrics = image_metrics(image)
 
-        if level == "HIGH":
-            st.error("RỦI RO CAO")
-        elif level == "MEDIUM":
-            st.warning("RỦI RO TRUNG BÌNH")
-        else:
-            st.success("RỦI RO THẤP")
+    st.subheader("2. Chỉ số kỹ thuật ảnh")
 
-        st.subheader("7. Lý do đánh giá")
-        for r in result.get("risk_reasons", []):
-            st.write(f"- {r}")
+    col1, col2 = st.columns(2)
 
-        st.subheader("8. Khuyến nghị xử lý")
-        for a in result.get("recommended_actions", []):
-            st.write(f"- {a}")
+    with col1:
+        st.metric("Mật độ trung bình", metrics["mean"])
+        st.metric("Độ biến thiên", metrics["std"])
+        st.metric("Tỷ lệ vùng đậm", f'{metrics["dark_ratio"]}%')
 
-        st.caption(f"Báo cáo tạo lúc: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    with col2:
+        st.metric("Tỷ lệ vùng rất đậm", f'{metrics["very_dark_ratio"]}%')
+        st.metric("Tỷ lệ vùng sáng/rỗng", f'{metrics["bright_ratio"]}%')
+        st.metric("Mật độ cạnh/cấu trúc", metrics["edge_density"])
+
+    # -------------------------
+    # ENHANCED IMAGE
+    # -------------------------
+    st.subheader("3. Ảnh tăng tương phản")
+
+    gray = np.array(image.convert("L"))
+
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    enhanced = clahe.apply(gray)
+
+    st.image(enhanced, use_container_width=True)
+
+    # -------------------------
+    # AI ANALYSIS
+    # -------------------------
+    if manifest.strip():
+
+        with st.spinner("AI đang phân tích ảnh X-ray..."):
+
+            try:
+
+                result = analyze_with_ai(image, manifest)
+
+                st.subheader("4. Kết quả AI Vision")
+                st.write(result)
+
+            except Exception as e:
+
+                st.error(str(e))
+
 else:
-    st.info("Nhập Manifest và tải ảnh X-ray container để bắt đầu.")
+
+    st.info("Vui lòng upload ảnh X-ray container.")
