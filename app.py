@@ -589,3 +589,310 @@ def analyze_image(image_pil):
 
         "suspicious_boxes": suspicious_boxes
     }
+    # =========================
+# RISK
+# =========================
+
+def calculate_risk(
+    manifest_class,
+    image_class,
+    metrics,
+    ai_confidence
+):
+
+    score = 20
+
+    reasons = []
+
+    if manifest_class == "UNKNOWN":
+
+        score += 15
+
+        reasons.append(
+            "Manifest chưa đủ thông tin để phân loại chắc chắn."
+        )
+
+    if image_class == "UNKNOWN":
+
+        score += 15
+
+        reasons.append(
+            "Ảnh X-ray chưa đủ đặc trưng để phân loại chắc chắn."
+        )
+
+    if (
+        manifest_class != "UNKNOWN"
+        and
+        image_class != "UNKNOWN"
+    ):
+
+        if manifest_class == image_class:
+
+            score -= 10
+
+            reasons.append(
+                "Đặc trưng ảnh tương đối phù hợp với Manifest."
+            )
+
+        else:
+
+            score += 35
+
+            reasons.append(
+                f"Manifest khai báo nhóm '{manifest_class}' nhưng ảnh gần nhóm '{image_class}'."
+            )
+
+    if metrics["Very Dark"] > 0.08:
+
+        score += 10
+
+        reasons.append(
+            "Có vùng rất đậm/mật độ cao cần đối chiếu."
+        )
+
+    if metrics["Line Count"] > 250:
+
+        score += 8
+
+        reasons.append(
+            "Ảnh có nhiều cấu trúc đường biên."
+        )
+
+    if metrics["Suspicious Zones"] >= 3:
+
+        score += 8
+
+        reasons.append(
+            "Có nhiều vùng cấu trúc cần đối chiếu."
+        )
+
+    if ai_confidence < 55:
+
+        score += 5
+
+        reasons.append(
+            "Độ tin cậy AI còn thấp."
+        )
+
+    score = max(
+        0,
+        min(100, score)
+    )
+
+    if score >= 75:
+
+        level = "🔴 RỦI RO CAO"
+
+        conclusion = (
+            "Khuyến nghị kiểm tra thực tế hoặc soi chiếu tăng cường."
+        )
+
+    elif score >= 45:
+
+        level = "🟠 RỦI RO TRUNG BÌNH"
+
+        conclusion = (
+            "Khuyến nghị rà soát Manifest và soi chiếu tăng cường."
+        )
+
+    else:
+
+        level = "🟢 RỦI RO THẤP"
+
+        conclusion = (
+            "Có thể xem xét thông quan nếu hồ sơ đầy đủ."
+        )
+
+    return (
+        score,
+        level,
+        reasons,
+        conclusion
+    )
+
+
+# =========================
+# UI
+# =========================
+
+manifest = st.text_area(
+    "📄 Manifest / Khai báo hàng hóa",
+    height=130
+)
+
+uploaded_file = st.file_uploader(
+    "📤 Upload ảnh X-ray",
+    type=["jpg", "jpeg", "png"]
+)
+
+if st.button("🔄 Reset / Xóa kết quả cũ"):
+
+    clear_old_results()
+
+    st.rerun()
+
+if uploaded_file is None:
+
+    st.stop()
+
+current_key = make_hash(
+    uploaded_file,
+    manifest
+)
+
+if st.session_state.get("last_key") != current_key:
+
+    clear_old_results()
+
+    st.session_state["last_key"] = current_key
+
+image_pil = Image.open(uploaded_file)
+
+manifest_class, manifest_scores = classify_manifest(
+    manifest
+)
+
+img_result = analyze_image(
+    image_pil
+)
+
+image_class = img_result["image_class"]
+
+ai_label = img_result["ai_label"]
+
+ai_confidence = img_result["ai_confidence"]
+
+metrics = img_result["metrics"]
+
+feature_scores = img_result["feature_scores"]
+
+(
+    risk_score,
+    risk_level,
+    reasons,
+    conclusion
+) = calculate_risk(
+    manifest_class,
+    image_class,
+    metrics,
+    ai_confidence
+)
+
+# =========================
+# DISPLAY
+# =========================
+
+st.subheader("1. Ảnh X-ray gốc")
+
+st.image(
+    image_pil,
+    use_container_width=True
+)
+
+st.subheader("2. Ảnh tăng tương phản")
+
+st.image(
+    img_result["gray"],
+    use_container_width=True,
+    clamp=True
+)
+
+st.subheader("3. Heatmap mật độ")
+
+st.image(
+    img_result["heatmap"],
+    use_container_width=True
+)
+
+st.subheader("4. Vùng cấu trúc cần đối chiếu")
+
+st.image(
+    img_result["marked"],
+    use_container_width=True
+)
+
+st.subheader("5. Phân tích kỹ thuật")
+
+st.json(metrics)
+
+st.subheader("6. So khớp Manifest và ảnh")
+
+st.write(
+    f"Manifest phân loại: **{manifest_class}**"
+)
+
+st.write(
+    f"Ảnh suy đoán nhóm: **{image_class}**"
+)
+
+st.success(
+    f"Nhận dạng ảnh gần đúng: {ai_label}"
+)
+
+st.progress(
+    ai_confidence / 100
+)
+
+st.write(
+    f"Độ tin cậy ảnh: **{ai_confidence}%**"
+)
+
+if (
+    manifest_class != "UNKNOWN"
+    and
+    image_class != "UNKNOWN"
+):
+
+    if manifest_class == image_class:
+
+        st.success(
+            "Ảnh tương đối phù hợp với Manifest."
+        )
+
+    else:
+
+        st.error(
+            "Ảnh có dấu hiệu KHÔNG phù hợp với Manifest."
+        )
+
+with st.expander(
+    "Chi tiết điểm Manifest"
+):
+
+    st.json(
+        manifest_scores
+    )
+
+with st.expander(
+    "Chi tiết điểm đặc trưng ảnh"
+):
+
+    st.json(
+        feature_scores
+    )
+
+st.subheader("7. Đánh giá rủi ro")
+
+st.markdown(
+    f"## {risk_level}"
+)
+
+st.progress(
+    risk_score / 100
+)
+
+st.write(
+    f"Điểm nghi vấn: **{risk_score}/100**"
+)
+
+st.subheader("8. Giải thích")
+
+for r in reasons:
+
+    st.write(f"- {r}")
+
+st.subheader("9. Kết luận nghiệp vụ")
+
+st.warning(
+    conclusion
+)
