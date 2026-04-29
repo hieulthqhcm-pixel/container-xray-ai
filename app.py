@@ -1,7 +1,4 @@
-# =========================
-# THAY TOÀN BỘ HÀM analyze_image()
-# BẰNG PHIÊN BẢN AI NHẬN DẠNG MÁY MÓC V7.5
-# =========================
+
 
 def analyze_image(image_pil):
 
