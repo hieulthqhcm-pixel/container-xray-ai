@@ -1,32 +1,23 @@
-# =========================
-# THAY TOÀN BỘ app.py
-# X-RAY CARGO ANALYZER V7.5 AI PROFESSIONAL
-# =========================
-
 import streamlit as st
 import cv2
 import numpy as np
 from PIL import Image
 import hashlib
 
-# =========================
-# CẤU HÌNH APP
-# =========================
-
 st.set_page_config(
-    page_title="X-Ray Cargo Analyzer V7.5 AI PROFESSIONAL",
+    page_title="X-Ray Cargo Analyzer V7.6 MATCHING PROFESSIONAL",
     page_icon="📦",
     layout="wide"
 )
 
-st.title("📦 X-Ray Cargo Analyzer V7.5 AI PROFESSIONAL")
+st.title("📦 X-Ray Cargo Analyzer V7.6 MATCHING PROFESSIONAL")
 
 st.caption(
-    "AI phân tích ảnh soi chiếu container bằng OpenCV local - không dùng API."
+    "Phân tích ảnh soi chiếu container bằng OpenCV local - ưu tiên so khớp Manifest và đặc trưng ảnh."
 )
 
 # =========================
-# RESET SESSION
+# RESET
 # =========================
 
 def make_hash(uploaded_file, manifest_text):
@@ -48,18 +39,14 @@ def make_hash(uploaded_file, manifest_text):
 
 def clear_old_results():
 
-    keys = [
-        "last_key"
-    ]
-
-    for k in keys:
+    for k in ["last_key"]:
 
         if k in st.session_state:
             del st.session_state[k]
 
 
 # =========================
-# PHÂN LOẠI MANIFEST
+# MANIFEST CLASSIFY
 # =========================
 
 def classify_manifest(text):
@@ -70,7 +57,6 @@ def classify_manifest(text):
 
         "MACHINERY": [
             "EXCAVATOR",
-            "USED EXCAVATOR",
             "MACHINE",
             "MACHINERY",
             "FORKLIFT",
@@ -91,12 +77,15 @@ def classify_manifest(text):
 
         "CERAMIC": [
             "CERAMIC",
+            "FLOWERPOT",
+            "POT",
             "TILE",
             "PORCELAIN",
             "STONE",
             "GRANITE",
             "MARBLE",
             "BRICK",
+            "6913",
             "6907",
             "6908"
         ],
@@ -137,6 +126,19 @@ def classify_manifest(text):
             "BATTERY",
             "8507",
             "8517"
+        ],
+
+        "LIQUID_CHEMICAL": [
+            "LIQUID",
+            "CHEMICAL",
+            "OIL",
+            "PAINT",
+            "INK",
+            "ADHESIVE",
+            "DRUM",
+            "BARREL",
+            "IBC",
+            "TANK"
         ]
     }
 
@@ -158,7 +160,7 @@ def classify_manifest(text):
 
 
 # =========================
-# AI PHÂN TÍCH ẢNH X-RAY
+# IMAGE ANALYSIS
 # =========================
 
 def analyze_image(image_pil):
@@ -176,15 +178,11 @@ def analyze_image(image_pil):
 
     total_pixels = gray.size
 
-    # =========================
-    # ROI
-    # =========================
+    roi_x1 = int(w * 0.12)
+    roi_x2 = int(w * 0.88)
 
-    roi_x1 = int(w * 0.18)
-    roi_x2 = int(w * 0.82)
-
-    roi_y1 = int(h * 0.18)
-    roi_y2 = int(h * 0.82)
+    roi_y1 = int(h * 0.12)
+    roi_y2 = int(h * 0.88)
 
     roi_mask = np.zeros_like(gray)
 
@@ -192,10 +190,6 @@ def analyze_image(image_pil):
         roi_y1:roi_y2,
         roi_x1:roi_x2
     ] = 255
-
-    # =========================
-    # CLAHE
-    # =========================
 
     clahe = cv2.createCLAHE(
         clipLimit=2.0,
@@ -210,10 +204,6 @@ def analyze_image(image_pil):
         0
     )
 
-    # =========================
-    # EDGE
-    # =========================
-
     edges = cv2.Canny(
         blur,
         35,
@@ -225,17 +215,24 @@ def analyze_image(image_pil):
         roi_mask
     )
 
-    # =========================
-    # DARK MASK
-    # =========================
-
     dark_threshold = np.percentile(
         blur,
         28
     )
 
+    very_dark_threshold = np.percentile(
+        blur,
+        12
+    )
+
     dark_mask = np.where(
         blur < dark_threshold,
+        255,
+        0
+    ).astype(np.uint8)
+
+    very_dark_mask = np.where(
+        blur < very_dark_threshold,
         255,
         0
     ).astype(np.uint8)
@@ -245,9 +242,10 @@ def analyze_image(image_pil):
         roi_mask
     )
 
-    # =========================
-    # OBJECT MASK
-    # =========================
+    very_dark_mask = cv2.bitwise_and(
+        very_dark_mask,
+        roi_mask
+    )
 
     edge_dilate = cv2.dilate(
         edges,
@@ -276,10 +274,6 @@ def analyze_image(image_pil):
         iterations=1
     )
 
-    # =========================
-    # CONTOUR
-    # =========================
-
     contours, _ = cv2.findContours(
         object_mask,
         cv2.RETR_EXTERNAL,
@@ -288,28 +282,23 @@ def analyze_image(image_pil):
 
     suspicious_boxes = []
 
-    machinery_shapes = 0
-    arm_shapes = 0
-    cabin_shapes = 0
+    object_area_sum = 0
 
     for cnt in contours:
 
         area = cv2.contourArea(cnt)
 
-        if area < total_pixels * 0.002:
+        if area < total_pixels * 0.0015:
             continue
 
         x, y, bw, bh = cv2.boundingRect(cnt)
 
-        # bỏ box nhỏ
-        if bw < 45 or bh < 45:
+        if bw < 35 or bh < 35:
             continue
 
-        # bỏ chữ dọc
-        if bh > bw * 3:
+        if bh > bw * 3 and bw < w * 0.08:
             continue
 
-        # bỏ sát mép
         if x < roi_x1 or x + bw > roi_x2:
             continue
 
@@ -325,24 +314,10 @@ def analyze_image(image_pil):
             roi_edge > 0
         ) / (bw * bh)
 
-        if edge_density_inside < 0.02:
+        if edge_density_inside < 0.012:
             continue
 
-        # =========================
-        # SHAPE ANALYSIS
-        # =========================
-
-        aspect_ratio = bw / (bh + 1)
-
-        # cabin/body
-        if 0.7 < aspect_ratio < 2.5:
-            cabin_shapes += 1
-
-        # arm/boom
-        if aspect_ratio > 2.8:
-            arm_shapes += 1
-
-        machinery_shapes += 1
+        object_area_sum += area
 
         suspicious_boxes.append(
             (
@@ -361,71 +336,12 @@ def analyze_image(image_pil):
         reverse=True
     )[:5]
 
-    # =========================
-    # HEATMAP
-    # =========================
-
-    density_map = 255 - enhanced
-
-    density_map = cv2.GaussianBlur(
-        density_map,
-        (9, 9),
-        0
-    )
-
-    heat = cv2.applyColorMap(
-        density_map,
-        cv2.COLORMAP_JET
-    )
-
-    heat_rgb = cv2.cvtColor(
-        heat,
-        cv2.COLOR_BGR2RGB
-    )
-
-    # =========================
-    # DRAW BOX
-    # =========================
-
-    marked = img.copy()
-
-    for i, (
-        x,
-        y,
-        bw,
-        bh,
-        area,
-        edge_density_inside
-    ) in enumerate(suspicious_boxes):
-
-        cv2.rectangle(
-            marked,
-            (x, y),
-            (x + bw, y + bh),
-            (255, 0, 0),
-            3
-        )
-
-        cv2.putText(
-            marked,
-            f"MACHINERY AREA {i+1}",
-            (x, max(25, y - 8)),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.55,
-            (255, 0, 0),
-            2
-        )
-
-    # =========================
-    # METRICS
-    # =========================
-
     dark_ratio = np.sum(
         dark_mask > 0
     ) / total_pixels
 
     very_dark_ratio = np.sum(
-        blur < np.percentile(blur, 12)
+        very_dark_mask > 0
     ) / total_pixels
 
     edge_density = np.sum(
@@ -454,96 +370,166 @@ def analyze_image(image_pil):
 
     line_count = 0 if lines is None else len(lines)
 
-    # =========================
-    # AI CLASSIFICATION
-    # =========================
+    object_area_ratio = object_area_sum / total_pixels
 
-    image_class = "UNKNOWN"
+    feature_scores = {
 
-    ai_label = "UNKNOWN"
+        "MACHINERY": 0,
+        "CERAMIC": 0,
+        "TEXTILE": 0,
+        "PLASTIC": 0,
+        "ELECTRONICS": 0,
+        "LIQUID_CHEMICAL": 0
+    }
 
-    ai_confidence = 50
+    if line_count >= 180:
+        feature_scores["MACHINERY"] += 35
 
-    # EXCAVATOR
+    elif line_count >= 100:
+        feature_scores["MACHINERY"] += 25
 
-    if (
-        line_count > 100
-        and edge_density > 0.020
-        and machinery_shapes >= 2
-        and arm_shapes >= 1
-    ):
+    if edge_density >= 0.020:
+        feature_scores["MACHINERY"] += 25
 
-        image_class = "MACHINERY"
+    if texture >= 180:
+        feature_scores["MACHINERY"] += 20
 
-        ai_label = "USED EXCAVATOR"
+    if very_dark_ratio >= 0.06:
+        feature_scores["MACHINERY"] += 10
+        feature_scores["ELECTRONICS"] += 10
 
-        ai_confidence = 90
+    if dark_ratio >= 0.18:
+        feature_scores["CERAMIC"] += 25
 
-    # HEAVY MACHINERY
+    if edge_density < 0.018 and texture < 220:
+        feature_scores["CERAMIC"] += 25
 
-    elif (
-        line_count > 70
-        and edge_density > 0.018
-        and machinery_shapes >= 2
-    ):
+    if object_area_ratio >= 0.08 and line_count < 150:
+        feature_scores["CERAMIC"] += 20
 
-        image_class = "MACHINERY"
+    if edge_density < 0.015:
+        feature_scores["TEXTILE"] += 25
 
-        ai_label = "HEAVY MACHINERY"
+    if texture < 120:
+        feature_scores["TEXTILE"] += 25
 
-        ai_confidence = 80
+    if very_dark_ratio < 0.04:
+        feature_scores["TEXTILE"] += 15
 
-    # CERAMIC
+    if 0.08 <= dark_ratio <= 0.20:
+        feature_scores["PLASTIC"] += 20
 
-    elif (
-        dark_ratio > 0.22
-        and edge_density < 0.018
-    ):
+    if 100 <= texture <= 260:
+        feature_scores["PLASTIC"] += 20
 
-        image_class = "CERAMIC"
+    if line_count < 180:
+        feature_scores["PLASTIC"] += 10
 
-        ai_label = "CERAMIC / TILE"
+    if texture >= 300:
+        feature_scores["ELECTRONICS"] += 30
 
-        ai_confidence = 75
+    if edge_density >= 0.028:
+        feature_scores["ELECTRONICS"] += 25
 
-    # TEXTILE
+    if line_count >= 220:
+        feature_scores["ELECTRONICS"] += 15
 
-    elif (
-        texture < 80
-        and dark_ratio < 0.14
-    ):
+    if edge_density < 0.014 and std_density < 45:
+        feature_scores["LIQUID_CHEMICAL"] += 25
 
-        image_class = "TEXTILE"
+    if dark_ratio >= 0.12 and texture < 140:
+        feature_scores["LIQUID_CHEMICAL"] += 20
 
-        ai_label = "TEXTILE"
+    image_class = max(
+        feature_scores,
+        key=feature_scores.get
+    )
 
-        ai_confidence = 70
+    image_score = feature_scores[image_class]
 
-    # PLASTIC
+    if image_score < 35:
+        image_class = "UNKNOWN"
 
-    elif (
-        dark_ratio < 0.18
-        and texture < 180
-    ):
+    ai_confidence = min(
+        95,
+        max(45, int(image_score))
+    )
 
-        image_class = "PLASTIC"
+    label_map = {
 
-        ai_label = "PLASTIC GOODS"
+        "MACHINERY":
+            "MACHINERY / HEAVY STRUCTURE",
 
-        ai_confidence = 70
+        "CERAMIC":
+            "CERAMIC / STONE / DENSE GOODS",
 
-    # ELECTRONICS
+        "TEXTILE":
+            "TEXTILE / SOFT GOODS",
 
-    elif (
-        edge_density > 0.035
-        and texture > 300
-    ):
+        "PLASTIC":
+            "PLASTIC / LIGHT-MEDIUM GOODS",
 
-        image_class = "ELECTRONICS"
+        "ELECTRONICS":
+            "ELECTRONICS / COMPLEX STRUCTURE",
 
-        ai_label = "ELECTRONIC EQUIPMENT"
+        "LIQUID_CHEMICAL":
+            "LIQUID / CHEMICAL / DRUM GOODS",
 
-        ai_confidence = 75
+        "UNKNOWN":
+            "UNKNOWN"
+    }
+
+    ai_label = label_map.get(
+        image_class,
+        "UNKNOWN"
+    )
+
+    density_map = 255 - enhanced
+
+    density_map = cv2.GaussianBlur(
+        density_map,
+        (9, 9),
+        0
+    )
+
+    heat = cv2.applyColorMap(
+        density_map,
+        cv2.COLORMAP_JET
+    )
+
+    heat_rgb = cv2.cvtColor(
+        heat,
+        cv2.COLOR_BGR2RGB
+    )
+
+    marked = img.copy()
+
+    for i, (
+        x,
+        y,
+        bw,
+        bh,
+        area,
+        edge_density_inside
+    ) in enumerate(suspicious_boxes):
+
+        cv2.rectangle(
+            marked,
+            (x, y),
+            (x + bw, y + bh),
+            (255, 0, 0),
+            3
+        )
+
+        cv2.putText(
+            marked,
+            f"DOI CHIEU {i+1}",
+            (x, max(25, y - 8)),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.55,
+            (255, 0, 0),
+            2
+        )
 
     metrics = {
 
@@ -565,17 +551,11 @@ def analyze_image(image_pil):
         "Line Count":
             int(line_count),
 
+        "Object Area Ratio":
+            round(float(object_area_ratio), 3),
+
         "Suspicious Zones":
             int(len(suspicious_boxes)),
-
-        "Machinery Shapes":
-            int(machinery_shapes),
-
-        "Arm Shapes":
-            int(arm_shapes),
-
-        "Cabin Shapes":
-            int(cabin_shapes),
 
         "AI Confidence":
             int(ai_confidence),
@@ -605,457 +585,7 @@ def analyze_image(image_pil):
 
         "ai_confidence": ai_confidence,
 
+        "feature_scores": feature_scores,
+
         "suspicious_boxes": suspicious_boxes
     }
-
-
-# =========================
-# ĐÁNH GIÁ RỦI RO
-# =========================
-
-def calculate_risk(
-    manifest_class,
-    image_class,
-    metrics
-):
-
-    score = 20
-
-    reasons = []
-
-    if manifest_class == "UNKNOWN":
-
-        score += 15
-
-        reasons.append(
-            "Manifest chưa đủ rõ để phân loại chắc chắn."
-        )
-
-    if image_class == "UNKNOWN":
-
-        score += 15
-
-        reasons.append(
-            "Ảnh X-ray chưa đủ đặc trưng để phân loại chắc chắn."
-        )
-
-    if (
-        manifest_class != "UNKNOWN"
-        and
-        image_class != "UNKNOWN"
-    ):
-
-        if manifest_class != image_class:
-
-            score += 30
-
-            reasons.append(
-                f"Ảnh có đặc trưng gần nhóm '{image_class}', chưa khớp hoàn toàn với Manifest '{manifest_class}'."
-            )
-
-        else:
-
-            score -= 10
-
-            reasons.append(
-                "Đặc trưng ảnh phù hợp với Manifest khai báo."
-            )
-
-    if metrics["Very Dark"] > 0.06:
-
-        score += 10
-
-        reasons.append(
-            "Có vùng đậm/mật độ cao cần đối chiếu."
-        )
-
-    if metrics["Edge Density"] > 0.025:
-
-        score += 10
-
-        reasons.append(
-            "Có nhiều cấu trúc kim loại/cơ khí."
-        )
-
-    if metrics["Suspicious Zones"] >= 2:
-
-        score += 8
-
-        reasons.append(
-            "Có nhiều vùng cấu trúc đáng lưu ý."
-        )
-
-    if metrics["Line Count"] > 250:
-
-        score += 8
-
-        reasons.append(
-            "Ảnh có cấu trúc phức tạp."
-        )
-
-    score = max(
-        0,
-        min(100, score)
-    )
-
-    if score >= 75:
-
-        level = "🔴 RỦI RO CAO"
-
-        conclusion = (
-            "Khuyến nghị kiểm tra thực tế hoặc soi chiếu tăng cường."
-        )
-
-    elif score >= 45:
-
-        level = "🟠 RỦI RO TRUNG BÌNH"
-
-        conclusion = (
-            "Khuyến nghị soi chiếu tăng cường và rà soát hồ sơ."
-        )
-
-    else:
-
-        level = "🟢 RỦI RO THẤP"
-
-        conclusion = (
-            "Có thể xem xét thông quan nếu hồ sơ đầy đủ."
-        )
-
-    return (
-        score,
-        level,
-        reasons,
-        conclusion
-    )
-
-
-# =========================
-# GIAO DIỆN
-# =========================
-
-manifest = st.text_area(
-    "📄 Manifest / Khai báo hàng hóa",
-    height=130,
-    placeholder="Ví dụ: 4 UNITS USED EXCAVATOR H.S.CODE: 84295200..."
-)
-
-uploaded_file = st.file_uploader(
-    "📤 Upload ảnh X-ray",
-    type=["jpg", "jpeg", "png"]
-)
-
-if st.button("🔄 Reset / Xóa kết quả cũ"):
-
-    clear_old_results()
-
-    st.rerun()
-
-if uploaded_file is None:
-
-    st.info(
-        "Hãy upload ảnh X-ray để bắt đầu phân tích."
-    )
-
-    st.stop()
-
-current_key = make_hash(
-    uploaded_file,
-    manifest
-)
-
-if st.session_state.get("last_key") != current_key:
-
-    clear_old_results()
-
-    st.session_state["last_key"] = current_key
-
-image_pil = Image.open(uploaded_file)
-
-st.subheader("1. Ảnh X-ray gốc")
-
-st.image(
-    image_pil,
-    use_container_width=True
-)
-
-if manifest.strip() == "":
-
-    st.warning(
-        "Vui lòng nhập Manifest / khai báo hàng hóa."
-    )
-
-    st.stop()
-
-# =========================
-# AI PHÂN TÍCH
-# =========================
-
-manifest_class, manifest_scores = classify_manifest(
-    manifest
-)
-
-img_result = analyze_image(
-    image_pil
-)
-
-image_class = img_result["image_class"]
-
-metrics = img_result["metrics"]
-
-ai_label = img_result["ai_label"]
-
-ai_confidence = img_result["ai_confidence"]
-
-(
-    risk_score,
-    risk_level,
-    reasons,
-    conclusion
-) = calculate_risk(
-    manifest_class,
-    image_class,
-    metrics
-)
-
-# =========================
-# HIỂN THỊ
-# =========================
-
-st.subheader(
-    "2. Ảnh tăng tương phản"
-)
-
-st.image(
-    img_result["gray"],
-    use_container_width=True,
-    clamp=True
-)
-
-st.subheader(
-    "3. Heatmap mật độ"
-)
-
-st.caption(
-    "Màu nóng thể hiện vùng đậm/mật độ cao."
-)
-
-st.image(
-    img_result["heatmap"],
-    use_container_width=True
-)
-
-st.subheader(
-    "4. Vùng cấu trúc cần đối chiếu"
-)
-
-st.image(
-    img_result["marked"],
-    use_container_width=True
-)
-
-st.subheader(
-    "5. Phân tích kỹ thuật nâng cao"
-)
-
-col1, col2 = st.columns(2)
-
-with col1:
-
-    st.metric(
-        "Dark Ratio",
-        metrics["Dark Ratio"]
-    )
-
-    st.metric(
-        "Very Dark",
-        metrics["Very Dark"]
-    )
-
-    st.metric(
-        "Std Density",
-        metrics["Std Density"]
-    )
-
-    st.metric(
-        "Edge Density",
-        metrics["Edge Density"]
-    )
-
-with col2:
-
-    st.metric(
-        "Texture",
-        metrics["Texture"]
-    )
-
-    st.metric(
-        "Line Count",
-        metrics["Line Count"]
-    )
-
-    st.metric(
-        "Suspicious Zones",
-        metrics["Suspicious Zones"]
-    )
-
-    st.metric(
-        "AI Confidence",
-        metrics["AI Confidence"]
-    )
-
-st.subheader(
-    "6. Nhận định loại hàng"
-)
-
-st.write(
-    f"Manifest AI phân loại: **{manifest_class}**"
-)
-
-st.write(
-    f"Ảnh AI suy đoán nhóm: **{image_class}**"
-)
-
-st.success(
-    f"AI nhận dạng gần đúng: {ai_label}"
-)
-
-st.progress(
-    ai_confidence / 100
-)
-
-st.write(
-    f"Độ tin cậy AI: **{ai_confidence}%**"
-)
-
-# =========================
-# GIẢI THÍCH AI
-# =========================
-
-if ai_label == "USED EXCAVATOR":
-
-    st.info(
-        """
-        AI phát hiện:
-
-        - Cấu trúc tay cần dài
-        - Cabin máy công trình
-        - Cụm cơ khí lặp lại
-        - Mật độ kim loại cao
-        - Đặc trưng giống máy xúc đã qua sử dụng
-        """
-    )
-
-elif ai_label == "HEAVY MACHINERY":
-
-    st.info(
-        """
-        AI phát hiện:
-
-        - Nhiều cấu trúc cơ khí
-        - Nhiều cạnh kim loại
-        - Dạng hàng máy móc công trình
-        """
-    )
-
-elif ai_label == "CERAMIC / TILE":
-
-    st.info(
-        """
-        AI phát hiện:
-
-        - Mật độ đậm đồng đều
-        - Ít cấu trúc cơ khí
-        """
-    )
-
-elif ai_label == "TEXTILE":
-
-    st.info(
-        """
-        AI phát hiện:
-
-        - Kết cấu mềm
-        - Ít cạnh kim loại
-        """
-    )
-
-elif ai_label == "PLASTIC GOODS":
-
-    st.info(
-        """
-        AI phát hiện:
-
-        - Mật độ trung bình
-        - Ít vùng kim loại đậm
-        """
-    )
-
-elif ai_label == "ELECTRONIC EQUIPMENT":
-
-    st.info(
-        """
-        AI phát hiện:
-
-        - Texture phức tạp
-        - Nhiều cấu trúc nhỏ
-        """
-    )
-
-with st.expander(
-    "Chi tiết điểm Manifest"
-):
-
-    st.json(
-        manifest_scores
-    )
-
-with st.expander(
-    "Chi tiết phân tích ảnh"
-):
-
-    st.json(
-        metrics
-    )
-
-st.subheader(
-    "7. Đánh giá rủi ro"
-)
-
-st.markdown(
-    f"## {risk_level}"
-)
-
-st.progress(
-    risk_score / 100
-)
-
-st.write(
-    f"Điểm nghi vấn: **{risk_score}/100**"
-)
-
-st.subheader(
-    "8. Giải thích"
-)
-
-if reasons:
-
-    for r in reasons:
-
-        st.write(
-            f"- {r}"
-        )
-
-else:
-
-    st.write(
-        "- Chưa phát hiện dấu hiệu nổi bật."
-    )
-
-st.subheader(
-    "9. Kết luận nghiệp vụ"
-)
-
-st.warning(
-    conclusion
-)
