@@ -1,198 +1,287 @@
 import streamlit as st
-from PIL import Image
 import numpy as np
+from PIL import Image
 import cv2
-import base64
-from openai import OpenAI
 
-# =========================
-# PAGE CONFIG
-# =========================
-st.set_page_config(page_title="Container X-ray AI V4", layout="wide")
-
-st.title("Container X-ray Intelligence V4 Professional")
-st.caption("AI Vision phân tích ảnh X-ray container & đối chiếu Manifest")
-
-# =========================
-# OPENAI CLIENT
-# =========================
-client = OpenAI(
-    api_key=st.secrets["OPENAI_API_KEY"]
+st.set_page_config(
+    page_title="X-Ray Cargo Analyzer V5",
+    layout="wide"
 )
 
-# =========================
-# INPUT
-# =========================
+st.title("📦 AI X-Ray Cargo Analyzer V5 Professional")
+
 manifest = st.text_area(
-    "Nhập Manifest / khai báo hàng hóa",
-    height=180,
-    placeholder="Ví dụ:\nTOTAL:864 CARTONS CERAMIC FLOWERPOT HS CODE:691390"
+    "📄 Nhập Manifest / Khai báo hàng hóa",
+    height=120
 )
 
-uploaded_file = st.file_uploader(
-    "Tải ảnh X-ray container",
+uploaded = st.file_uploader(
+    "📤 Upload ảnh X-ray",
     type=["jpg", "jpeg", "png"]
 )
 
 # =========================
-# IMAGE TO BASE64
+# KEYWORDS
 # =========================
-def image_to_base64(img):
-    import io
-    buffered = io.BytesIO()
-    img.save(buffered, format="JPEG")
-    return base64.b64encode(buffered.getvalue()).decode()
 
-# =========================
-# AI ANALYSIS
-# =========================
-def analyze_with_ai(image, manifest_text):
+dense_keywords = [
+    "steel",
+    "metal",
+    "machinery",
+    "engine",
+    "motor",
+    "forklift",
+    "iron",
+    "equipment",
+    "bearing",
+    "pipe",
+    "machine",
+]
 
-    base64_image = image_to_base64(image)
-
-    prompt = f"""
-Bạn là chuyên gia soi chiếu container Hải quan.
-
-NHIỆM VỤ:
-
-1. Phân tích ảnh X-ray container thực tế.
-2. Xác định:
-- hàng đồng nhất hay không
-- có cấu trúc máy móc/kim loại không
-- mật độ hàng
-- vùng bất thường
-- khả năng che giấu
-- khả năng sai khai báo Manifest
-
-3. So sánh THỰC TẾ ảnh với manifest.
-
-Manifest:
-{manifest_text}
-
-YÊU CẦU RẤT QUAN TRỌNG:
-
-- KHÔNG đoán bừa.
-- Chỉ kết luận theo hình ảnh thực tế.
-- Nếu manifest khai gạch/ceramic nhưng ảnh KHÔNG giống gạch đồng nhất -> phải cảnh báo.
-- Nếu ảnh có máy móc/kim loại/cấu trúc cơ khí -> phải nêu rõ.
-- Nếu không đủ cơ sở -> nói "không đủ cơ sở kết luận".
-- Không được copy kết quả cũ.
-- Phải đánh giá đúng theo từng ảnh mới upload.
-
-TRẢ KẾT QUẢ:
-- Nhóm hàng ảnh giống nhất
-- Mức độ phù hợp manifest
-- Điểm rủi ro 0-100
-- Nhận định chuyên sâu
-- Khuyến nghị kiểm tra
-"""
-
-    response = client.responses.create(
-        model="gpt-4.1-mini",
-        input=[
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "input_text",
-                        "text": prompt
-                    },
-                    {
-                        "type": "input_image",
-                        "image_url": f"data:image/jpeg;base64,{base64_image}"
-                    }
-                ]
-            }
-        ]
-    )
-
-    return response.output_text
+light_keywords = [
+    "flowerpot",
+    "ceramic",
+    "plastic",
+    "toy",
+    "paper",
+    "textile",
+    "garment",
+    "shoe",
+    "bag",
+    "foam",
+]
 
 # =========================
 # IMAGE ANALYSIS
 # =========================
-def image_metrics(image):
 
-    img = np.array(image.convert("L"))
+def analyze_image(img):
 
-    mean = np.mean(img)
-    std = np.std(img)
+    gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 
-    dark_ratio = np.sum(img < 60) / img.size * 100
-    very_dark_ratio = np.sum(img < 30) / img.size * 100
-    bright_ratio = np.sum(img > 210) / img.size * 100
+    brightness = np.mean(gray)
 
-    edges = cv2.Canny(img, 50, 150)
+    edges = cv2.Canny(gray, 80, 180)
     edge_density = np.sum(edges > 0) / edges.size
 
+    variance = np.var(gray)
+
+    # Dense detection
+    dense_ratio = np.sum(gray < 70) / gray.size
+
+    # Heatmap
+    heat = cv2.applyColorMap(gray, cv2.COLORMAP_JET)
+
+    # Suspicious zones
+    thresh = cv2.threshold(gray, 65, 255, cv2.THRESH_BINARY_INV)[1]
+
+    contours, _ = cv2.findContours(
+        thresh,
+        cv2.RETR_EXTERNAL,
+        cv2.CHAIN_APPROX_SIMPLE
+    )
+
+    boxes = []
+
+    for c in contours:
+        area = cv2.contourArea(c)
+
+        if area > 5000:
+            x, y, w, h = cv2.boundingRect(c)
+            boxes.append((x, y, w, h))
+
     return {
-        "mean": round(mean, 2),
-        "std": round(std, 2),
-        "dark_ratio": round(dark_ratio, 2),
-        "very_dark_ratio": round(very_dark_ratio, 2),
-        "bright_ratio": round(bright_ratio, 2),
-        "edge_density": round(edge_density, 4)
+        "brightness": brightness,
+        "edge_density": edge_density,
+        "variance": variance,
+        "dense_ratio": dense_ratio,
+        "heat": heat,
+        "boxes": boxes
     }
+
+# =========================
+# MANIFEST ANALYSIS
+# =========================
+
+def manifest_expected_density(text):
+
+    text = text.lower()
+
+    dense_score = 0
+    light_score = 0
+
+    for k in dense_keywords:
+        if k in text:
+            dense_score += 1
+
+    for k in light_keywords:
+        if k in text:
+            light_score += 1
+
+    if dense_score > light_score:
+        return "dense"
+
+    return "light"
+
+# =========================
+# RISK ENGINE
+# =========================
+
+def calculate_risk(result, expected):
+
+    dense_ratio = result["dense_ratio"]
+
+    reasons = []
+
+    score = 0
+
+    # CASE 1
+    if expected == "light":
+
+        if dense_ratio > 0.45:
+            score += 70
+            reasons.append(
+                "Ảnh có mật độ hấp thụ tia X cao bất thường so với manifest khai báo hàng nhẹ"
+            )
+
+        elif dense_ratio > 0.30:
+            score += 40
+            reasons.append(
+                "Xuất hiện vùng hấp thụ tia X đậm đáng chú ý"
+            )
+
+    # CASE 2
+    else:
+
+        if dense_ratio < 0.15:
+            score += 60
+            reasons.append(
+                "Manifest khai máy móc/kim loại nhưng ảnh X-ray quá rỗng"
+            )
+
+    # Edge density
+    if result["edge_density"] > 0.12:
+        score += 15
+        reasons.append(
+            "Mật độ cấu trúc vật thể cao"
+        )
+
+    # Variance
+    if result["variance"] > 5000:
+        score += 15
+        reasons.append(
+            "Độ biến thiên ảnh lớn"
+        )
+
+    score = min(score, 100)
+
+    if score >= 70:
+        level = "🔴 RỦI RO CAO"
+
+    elif score >= 40:
+        level = "🟠 RỦI RO TRUNG BÌNH"
+
+    else:
+        level = "🟢 ÍT NGHI VẤN"
+
+    return score, level, reasons
 
 # =========================
 # MAIN
 # =========================
-if uploaded_file:
 
-    image = Image.open(uploaded_file)
+if uploaded is not None:
 
-    st.subheader("1. Ảnh gốc")
-    st.image(image, use_container_width=True)
+    image = Image.open(uploaded).convert("RGB")
 
-    # -------------------------
-    # TECHNICAL ANALYSIS
-    # -------------------------
-    metrics = image_metrics(image)
+    img = np.array(image)
 
-    st.subheader("2. Chỉ số kỹ thuật ảnh")
+    st.image(
+        img,
+        caption="Ảnh X-ray",
+        width='stretch'
+    )
 
-    col1, col2 = st.columns(2)
+    result = analyze_image(img)
 
-    with col1:
-        st.metric("Mật độ trung bình", metrics["mean"])
-        st.metric("Độ biến thiên", metrics["std"])
-        st.metric("Tỷ lệ vùng đậm", f'{metrics["dark_ratio"]}%')
+    expected = manifest_expected_density(manifest)
 
-    with col2:
-        st.metric("Tỷ lệ vùng rất đậm", f'{metrics["very_dark_ratio"]}%')
-        st.metric("Tỷ lệ vùng sáng/rỗng", f'{metrics["bright_ratio"]}%')
-        st.metric("Mật độ cạnh/cấu trúc", metrics["edge_density"])
+    score, level, reasons = calculate_risk(
+        result,
+        expected
+    )
 
-    # -------------------------
-    # ENHANCED IMAGE
-    # -------------------------
-    st.subheader("3. Ảnh tăng tương phản")
+    # Draw suspicious boxes ONLY if risk high
+    boxed = img.copy()
 
-    gray = np.array(image.convert("L"))
+    if score >= 40:
 
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-    enhanced = clahe.apply(gray)
+        for (x, y, w, h) in result["boxes"]:
 
-    st.image(enhanced, use_container_width=True)
+            cv2.rectangle(
+                boxed,
+                (x, y),
+                (x + w, y + h),
+                (255, 0, 0),
+                3
+            )
 
-    # -------------------------
-    # AI ANALYSIS
-    # -------------------------
-    if manifest.strip():
+    st.subheader("🔥 Heatmap phân tích")
 
-        with st.spinner("AI đang phân tích ảnh X-ray..."):
+    st.image(
+        result["heat"],
+        width='stretch'
+    )
 
-            try:
+    st.subheader("📦 Khu vực nghi vấn")
 
-                result = analyze_with_ai(image, manifest)
+    st.image(
+        boxed,
+        width='stretch'
+    )
 
-                st.subheader("4. Kết quả AI Vision")
-                st.write(result)
+    st.subheader("📊 Chỉ số kỹ thuật")
 
-            except Exception as e:
+    c1, c2, c3, c4 = st.columns(4)
 
-                st.error(str(e))
+    c1.metric(
+        "Độ sáng",
+        round(result["brightness"], 2)
+    )
 
-else:
+    c2.metric(
+        "Mật độ cạnh",
+        round(result["edge_density"], 3)
+    )
 
-    st.info("Vui lòng upload ảnh X-ray container.")
+    c3.metric(
+        "Biến thiên",
+        round(result["variance"], 2)
+    )
+
+    c4.metric(
+        "Tỷ lệ vùng đậm",
+        round(result["dense_ratio"], 3)
+    )
+
+    st.subheader("🚨 Đánh giá rủi ro")
+
+    st.markdown(f"## {level}")
+
+    st.progress(score / 100)
+
+    st.write(f"Điểm nghi vấn: {score}/100")
+
+    st.subheader("📝 Giải thích")
+
+    if reasons:
+
+        for r in reasons:
+            st.write("- " + r)
+
+    else:
+        st.write("Không phát hiện dấu hiệu bất thường lớn.")
+
+    st.subheader("📄 Manifest phân loại")
+
+    st.write(f"AI đánh giá manifest thuộc nhóm: **{expected.upper()}**")
