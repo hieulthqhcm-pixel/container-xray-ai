@@ -5,11 +5,11 @@ import cv2
 import re
 
 st.set_page_config(
-    page_title="X-Ray Cargo Analyzer V7",
+    page_title="X-Ray Cargo Analyzer V7.1",
     layout="wide"
 )
 
-st.title("📦 X-Ray Cargo Analyzer V7 LOCAL PROFESSIONAL")
+st.title("📦 X-Ray Cargo Analyzer V7.1 LOCAL PROFESSIONAL")
 st.caption("Phân tích X-ray container bằng OpenCV local, không dùng API, không tốn phí.")
 
 manifest = st.text_area(
@@ -23,10 +23,6 @@ uploaded = st.file_uploader(
     type=["jpg", "jpeg", "png"]
 )
 
-# =====================================================
-# MANIFEST ENGINE
-# =====================================================
-
 GROUP_KEYWORDS = {
     "ceramic": [
         "ceramic", "flowerpot", "flower pot", "pottery", "porcelain",
@@ -36,7 +32,7 @@ GROUP_KEYWORDS = {
     "machinery": [
         "machine", "machinery", "equipment", "engine", "motor", "forklift",
         "compressor", "generator", "pump", "bearing", "steel", "iron",
-        "metal", "pipe", "tool", "parts"
+        "metal", "pipe", "tool", "parts", "crane", "excavator"
     ],
     "light": [
         "plastic", "toy", "toys", "paper", "carton", "cartons", "foam",
@@ -58,53 +54,23 @@ GROUP_KEYWORDS = {
 }
 
 EXPECTED_PROFILE = {
-    "ceramic": {
-        "density": "medium",
-        "uniform": True,
-        "mechanical": False
-    },
-    "machinery": {
-        "density": "dense",
-        "uniform": False,
-        "mechanical": True
-    },
-    "light": {
-        "density": "light",
-        "uniform": False,
-        "mechanical": False
-    },
-    "textile": {
-        "density": "light",
-        "uniform": False,
-        "mechanical": False
-    },
-    "electronics": {
-        "density": "dense",
-        "uniform": False,
-        "mechanical": True
-    },
-    "food": {
-        "density": "medium",
-        "uniform": False,
-        "mechanical": False
-    },
-    "chemical": {
-        "density": "medium",
-        "uniform": True,
-        "mechanical": False
-    },
-    "unknown": {
-        "density": "unknown",
-        "uniform": False,
-        "mechanical": False
-    }
+    "ceramic": {"density": "medium", "uniform": True, "mechanical": False},
+    "machinery": {"density": "dense", "uniform": False, "mechanical": True},
+    "light": {"density": "light", "uniform": False, "mechanical": False},
+    "textile": {"density": "light", "uniform": False, "mechanical": False},
+    "electronics": {"density": "dense", "uniform": False, "mechanical": True},
+    "food": {"density": "medium", "uniform": False, "mechanical": False},
+    "chemical": {"density": "medium", "uniform": True, "mechanical": False},
+    "unknown": {"density": "unknown", "uniform": False, "mechanical": False}
 }
+
 
 def clean_text(text):
     text = text.lower()
     text = re.sub(r"[^a-zA-Z0-9À-ỹ\s]", " ", text)
     text = re.sub(r"\s+", " ", text)
     return text.strip()
+
 
 def classify_manifest(text):
     text = clean_text(text)
@@ -122,12 +88,10 @@ def classify_manifest(text):
 
     return best, scores
 
-# =====================================================
-# IMAGE PREPROCESS
-# =====================================================
 
 def to_gray(img):
     return cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+
 
 def normalize_gray(gray):
     p2, p98 = np.percentile(gray, (2, 98))
@@ -135,40 +99,31 @@ def normalize_gray(gray):
     norm = ((clipped - p2) / (p98 - p2 + 1e-6) * 255).astype(np.uint8)
     return norm
 
-def crop_main_cargo_region(gray):
-    """
-    Crop vùng hàng chính, bỏ nền trắng, chữ ngoài mép, viền ảnh.
-    """
-    h, w = gray.shape
 
+def crop_main_cargo_region(gray):
+    h, w = gray.shape
     norm = normalize_gray(gray)
 
-    # mask vật thể: vùng không quá sáng
     mask = norm < 225
-
-    # bỏ nhiễu nhỏ
     kernel = np.ones((5, 5), np.uint8)
+
     mask_u8 = (mask.astype(np.uint8) * 255)
     mask_u8 = cv2.morphologyEx(mask_u8, cv2.MORPH_OPEN, kernel, iterations=1)
     mask_u8 = cv2.morphologyEx(mask_u8, cv2.MORPH_CLOSE, kernel, iterations=2)
 
     contours, _ = cv2.findContours(mask_u8, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-    if not contours:
-        return gray, (0, 0, w, h), mask_u8
-
-    # lấy contour lớn nhất nhưng bỏ viền quá sát mép
     valid = []
 
     for c in contours:
         area = cv2.contourArea(c)
+
         if area < h * w * 0.01:
             continue
 
         x, y, cw, ch = cv2.boundingRect(c)
-
-        # bỏ chữ nhỏ hoặc đường viền dọc ngang
         aspect = cw / max(ch, 1)
+
         if aspect > 15 or aspect < 0.05:
             continue
 
@@ -177,7 +132,6 @@ def crop_main_cargo_region(gray):
     if not valid:
         return gray, (0, 0, w, h), mask_u8
 
-    # lấy vùng lớn nhất
     valid.sort(reverse=True, key=lambda x: x[0])
     _, x, y, cw, ch = valid[0]
 
@@ -192,9 +146,6 @@ def crop_main_cargo_region(gray):
 
     return crop, (x0, y0, x1, y1), mask_u8
 
-# =====================================================
-# IMAGE FEATURE ENGINE
-# =====================================================
 
 def compute_features(gray_crop):
     norm = normalize_gray(gray_crop)
@@ -218,7 +169,6 @@ def compute_features(gray_crop):
     lap = cv2.Laplacian(blur, cv2.CV_64F)
     texture_score = float(np.var(lap))
 
-    # Hough lines: phát hiện cấu trúc thẳng/cơ khí
     lines = cv2.HoughLinesP(
         edges,
         rho=1,
@@ -230,9 +180,9 @@ def compute_features(gray_crop):
 
     line_count = 0 if lines is None else len(lines)
 
-    # contour vùng đậm thông minh
     dark_mask = (norm < 95).astype(np.uint8) * 255
     kernel = np.ones((3, 3), np.uint8)
+
     dark_mask = cv2.morphologyEx(dark_mask, cv2.MORPH_OPEN, kernel, iterations=1)
     dark_mask = cv2.morphologyEx(dark_mask, cv2.MORPH_CLOSE, kernel, iterations=1)
 
@@ -243,20 +193,32 @@ def compute_features(gray_crop):
 
     for c in contours:
         area = cv2.contourArea(c)
-        if area < max(800, h * w * 0.004):
+
+        if area < max(1500, h * w * 0.006):
             continue
 
         x, y, cw, ch = cv2.boundingRect(c)
         aspect = cw / max(ch, 1)
 
-        if aspect > 12 or aspect < 0.08:
+        if area > h * w * 0.35:
+            continue
+
+        if x < 15 or y < 15:
+            continue
+
+        if aspect > 6 or aspect < 0.15:
             continue
 
         region = norm[y:y + ch, x:x + cw]
+        local_std = float(np.std(region))
+
+        if local_std < 18:
+            continue
+
         region_dark = float(np.sum(region < 85) / region.size)
         region_std = float(np.std(region))
 
-        if region_dark > 0.20 or region_std > 45:
+        if region_dark > 0.18 or region_std > 42:
             suspicious.append({
                 "box": (x, y, cw, ch),
                 "area": float(area),
@@ -267,8 +229,8 @@ def compute_features(gray_crop):
 
     suspicious_count = len(suspicious)
 
-    # uniformity: hàng đồng đều sẽ có edge thấp, std vừa, contour ít
     uniformity_score = 0
+
     if edge_density < 0.035:
         uniformity_score += 30
     if std_density < 55:
@@ -278,18 +240,18 @@ def compute_features(gray_crop):
     if texture_score < 120:
         uniformity_score += 25
 
-    # mechanical score: nhiều đường/cạnh/vùng đậm/vùng không đều
     mechanical_score = 0
+
     if edge_density > 0.045:
         mechanical_score += 25
     if line_count > 45:
-        mechanical_score += 25
-    if suspicious_count >= 4:
-        mechanical_score += 25
+        mechanical_score += 35
+    if suspicious_count >= 3:
+        mechanical_score += 30
     if texture_score > 160:
         mechanical_score += 15
     if very_dark_ratio > 0.035:
-        mechanical_score += 10
+        mechanical_score += 15
 
     return {
         "norm": norm,
@@ -309,6 +271,7 @@ def compute_features(gray_crop):
         "uniformity_score": uniformity_score,
         "mechanical_score": mechanical_score
     }
+
 
 def predict_image_profile(features):
     scores = {
@@ -330,7 +293,6 @@ def predict_image_profile(features):
     uniformity = features["uniformity_score"]
     mechanical = features["mechanical_score"]
 
-    # Ceramic / gạch / flowerpot: thường đồng đều, mật độ vừa, cấu trúc lặp lại
     if uniformity >= 55:
         scores["ceramic"] += 35
     if 0.03 <= dark <= 0.22:
@@ -342,19 +304,17 @@ def predict_image_profile(features):
     if suspicious <= 4:
         scores["ceramic"] += 10
 
-    # Machinery: nhiều đường thẳng, vùng đậm, texture phức tạp
     if mechanical >= 45:
-        scores["machinery"] += 40
-    if lines > 60:
-        scores["machinery"] += 20
-    if suspicious >= 5:
-        scores["machinery"] += 20
+        scores["machinery"] += 45
+    if lines > 45:
+        scores["machinery"] += 25
+    if suspicious >= 3:
+        scores["machinery"] += 25
     if texture > 180:
         scores["machinery"] += 10
     if very_dark > 0.04:
         scores["machinery"] += 10
 
-    # Light goods
     if dark < 0.05:
         scores["light"] += 35
     if std < 40:
@@ -362,20 +322,17 @@ def predict_image_profile(features):
     if edge < 0.035:
         scores["light"] += 20
 
-    # Textile
     if 0.025 <= edge <= 0.06 and dark < 0.10 and 35 <= std <= 70:
         scores["textile"] += 40
 
-    # Electronics
     if very_dark > 0.05 and suspicious >= 4:
         scores["electronics"] += 35
     if lines > 80 and texture > 180:
         scores["electronics"] += 25
 
-    # Mixed
     if mechanical >= 45 and uniformity < 55:
         scores["mixed"] += 35
-    if suspicious >= 6 and std > 60:
+    if suspicious >= 5 and std > 60:
         scores["mixed"] += 25
 
     best = max(scores, key=scores.get)
@@ -385,15 +342,10 @@ def predict_image_profile(features):
 
     return best, scores
 
-# =====================================================
-# RISK ENGINE
-# =====================================================
 
 def calculate_risk(manifest_type, image_type, features):
     score = 0
     reasons = []
-
-    manifest_profile = EXPECTED_PROFILE.get(manifest_type, EXPECTED_PROFILE["unknown"])
 
     mechanical_score = features["mechanical_score"]
     uniformity_score = features["uniformity_score"]
@@ -402,71 +354,75 @@ def calculate_risk(manifest_type, image_type, features):
     very_dark = features["very_dark_ratio"]
     texture = features["texture_score"]
     edge = features["edge_density"]
-    lines = features["line_count"]
+    line_count = features["line_count"]
     std = features["std_density"]
 
     if manifest_type == "unknown":
         score += 25
         reasons.append("Manifest chưa xác định rõ nhóm hàng, cần mô tả cụ thể hơn.")
 
-    # mismatch giữa manifest và ảnh
     if manifest_type != "unknown" and image_type != "unknown":
         if manifest_type != image_type:
             compatible = False
 
-            # ceramic và light đôi khi gần nhau nếu ảnh đồng đều
             if manifest_type == "ceramic" and image_type in ["light", "textile"] and uniformity_score > 55:
                 compatible = True
 
             if not compatible:
                 score += 35
-                reasons.append(f"Ảnh có đặc trưng gần nhóm '{image_type}', không khớp hoàn toàn với Manifest '{manifest_type}'.")
+                reasons.append(f"Ảnh có đặc trưng gần nhóm '{image_type}', chưa khớp hoàn toàn với Manifest '{manifest_type}'.")
 
-    # manifest ceramic nhưng ảnh có cơ khí
     if manifest_type == "ceramic":
         if mechanical_score >= 45:
-            score += 30
+            score += 35
             reasons.append("Manifest khai ceramic/gạch/gốm nhưng ảnh có dấu hiệu cấu trúc cơ khí hoặc hàng không đồng nhất.")
-        if suspicious_count >= 5:
-            score += 20
+
+        if suspicious_count >= 3:
+            score += 35
             reasons.append("Có nhiều vùng đậm đáng chú ý trong vùng hàng.")
+
         if std > 70:
             score += 15
             reasons.append("Mật độ vùng hàng biến thiên cao, không giống hàng ceramic đồng đều.")
 
-    # manifest light/textile nhưng ảnh đậm/cơ khí
+        if line_count > 50:
+            score += 25
+            reasons.append("Manifest khai ceramic nhưng ảnh có nhiều cấu trúc thẳng/cơ khí.")
+
     if manifest_type in ["light", "textile"]:
         if dark > 0.20 or very_dark > 0.04:
             score += 35
             reasons.append("Manifest khai hàng nhẹ/hàng mềm nhưng ảnh có mật độ hấp thụ cao.")
+
         if mechanical_score >= 40:
             score += 30
             reasons.append("Ảnh có cấu trúc phức tạp không phù hợp hàng nhẹ/hàng mềm.")
 
-    # manifest machinery nhưng ảnh quá rỗng
     if manifest_type == "machinery":
         if dark < 0.08 and mechanical_score < 35:
             score += 35
             reasons.append("Manifest khai máy móc/kim loại nhưng ảnh vùng hàng không có mật độ/cấu trúc tương ứng.")
 
-    # điện tử/pin không khai nhưng ảnh có cụm rất đậm
     if manifest_type != "electronics":
         if very_dark > 0.055 and suspicious_count >= 4:
             score += 25
             reasons.append("Có nhiều cụm rất đậm, cần lưu ý khả năng linh kiện/pin/hàng đặc không khai báo.")
 
-    # chỉ số chung
     if texture > 220:
         score += 10
         reasons.append("Texture ảnh phức tạp.")
 
-    if lines > 80:
-        score += 10
+    if line_count > 45:
+        score += 25
         reasons.append("Có nhiều đường cấu trúc thẳng, cần đối chiếu khả năng máy móc/khung kim loại.")
 
     if edge > 0.065:
         score += 10
         reasons.append("Mật độ cạnh cao.")
+
+    if mechanical_score > 55 and suspicious_count >= 2:
+        score += 25
+        reasons.append("Có cụm cấu trúc cơ khí/mật độ cao đáng chú ý.")
 
     score = min(score, 100)
 
@@ -482,9 +438,6 @@ def calculate_risk(manifest_type, image_type, features):
 
     return score, level, reasons
 
-# =====================================================
-# VISUALIZATION
-# =====================================================
 
 def make_heatmap(gray_crop):
     norm = normalize_gray(gray_crop)
@@ -493,12 +446,15 @@ def make_heatmap(gray_crop):
     heat = cv2.cvtColor(heat, cv2.COLOR_BGR2RGB)
     return heat
 
+
 def draw_suspicious(gray_crop, suspicious):
     out = cv2.cvtColor(normalize_gray(gray_crop), cv2.COLOR_GRAY2RGB)
 
     for s in suspicious:
         x, y, w, h = s["box"]
+
         cv2.rectangle(out, (x, y), (x + w, y + h), (255, 0, 0), 3)
+
         cv2.putText(
             out,
             "DANG LUU Y",
@@ -511,9 +467,6 @@ def draw_suspicious(gray_crop, suspicious):
 
     return out
 
-# =====================================================
-# MAIN
-# =====================================================
 
 if uploaded is not None:
     image = Image.open(uploaded).convert("RGB")
@@ -552,6 +505,7 @@ if uploaded is not None:
     st.subheader("5. Phân tích kỹ thuật nâng cao")
 
     c1, c2, c3 = st.columns(3)
+
     c1.metric("Dark Ratio", round(features["dark_ratio"], 3))
     c1.metric("Very Dark", round(features["very_dark_ratio"], 3))
     c1.metric("Std Density", round(features["std_density"], 1))
