@@ -2,75 +2,253 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>X-Ray Cargo Inspector V8 Pro Auto Model</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>X-Ray Cargo Inspector V9 Pro Max</title>
 <style>
 :root{
-  --bg:#07111d;--card:#0d1b2a;--bd:#163a5a;--cyan:#00c8f0;
-  --ok:#00d084;--err:#ff3355;--txt:#f2f7ff;--muted:#85a5bf;
+  --bg:#050b13;--bg2:#0a1420;--card:#0e1b2b;--card2:#10243a;
+  --border:#1b4167;--border2:#2b5d8c;
+  --cyan:#00d9ff;--blue:#1689ff;--green:#00e096;--yellow:#ffd33d;
+  --orange:#ff9f1a;--red:#ff3b5c;--purple:#a855f7;
+  --text:#eef7ff;--muted:#82a7c5;--dim:#4e6e88;
+  --r:18px;
 }
-*{box-sizing:border-box}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{
-  background:var(--bg);color:var(--txt);font-family:Arial,sans-serif;
-  padding:16px;max-width:760px;margin:auto;
+  background:
+    radial-gradient(circle at top left,rgba(0,217,255,.18),transparent 32%),
+    radial-gradient(circle at top right,rgba(168,85,247,.15),transparent 28%),
+    var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+  padding-bottom:80px;
 }
-h1{font-size:24px;margin:10px 0 4px}
-.sub{color:var(--muted);margin-bottom:18px}
+.header{
+  position:sticky;top:0;z-index:10;
+  padding:18px 16px 14px;
+  background:rgba(5,11,19,.92);
+  backdrop-filter:blur(18px);
+  border-bottom:1px solid var(--border);
+}
+.hrow{display:flex;align-items:center;gap:12px;max-width:860px;margin:auto}
+.logo{
+  width:52px;height:52px;border-radius:16px;
+  background:linear-gradient(135deg,#0097b8,#00e5ff);
+  display:flex;align-items:center;justify-content:center;font-size:26px;
+  box-shadow:0 0 22px rgba(0,217,255,.28);
+}
+.htitle{font-size:22px;font-weight:900;letter-spacing:-.7px}
+.hsub{font-size:13px;color:var(--muted);margin-top:2px}
+.badge{
+  margin-left:auto;padding:7px 12px;border-radius:999px;
+  color:#ffe66d;border:1px solid rgba(255,211,61,.5);
+  background:rgba(255,211,61,.08);
+  font-weight:900;font-size:12px;letter-spacing:.8px;
+}
+.wrap{max-width:860px;margin:auto;padding:16px}
+.steps{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  border-radius:14px;overflow:hidden;background:#0c1928;margin-bottom:16px;
+  border:1px solid #16314e;
+}
+.step{
+  padding:12px 5px;text-align:center;font-size:11px;font-weight:900;
+  color:var(--dim);letter-spacing:.6px;
+}
+.step.on{background:linear-gradient(90deg,#008abd,#00d4f5);color:white}
 .card{
-  background:var(--card);border:1px solid var(--bd);
-  padding:18px;border-radius:16px;margin-bottom:16px;
+  background:linear-gradient(180deg,rgba(16,36,58,.94),rgba(11,23,37,.94));
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:18px;margin-bottom:16px;
+  box-shadow:0 10px 30px rgba(0,0,0,.22);
 }
-input,textarea{
-  width:100%;padding:14px;border-radius:12px;border:1px solid #1d4d77;
-  background:#081521;color:white;font-size:16px;margin-top:8px;
+.chd{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.num{
+  width:30px;height:30px;border-radius:50%;
+  background:var(--cyan);color:#001018;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:900;
 }
-button{
-  width:100%;padding:16px;border:none;border-radius:14px;
-  background:linear-gradient(90deg,#0088bb,#00d4f5);
-  color:white;font-size:18px;font-weight:bold;margin-top:14px;cursor:pointer;
+.ctitle{font-weight:900;color:var(--cyan);letter-spacing:.5px;text-transform:uppercase;font-size:13px}
+input,textarea,select{
+  width:100%;background:#071320;border:1px solid var(--border2);
+  color:var(--text);border-radius:13px;padding:14px;font-size:16px;
+  outline:none;font-family:inherit;
 }
-button.secondary{background:#102235;border:1px solid #24527b;color:#00d4f5}
-img{max-width:100%;border-radius:12px;margin-top:12px}
+textarea{resize:vertical;line-height:1.55}
+input:focus,textarea:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(0,217,255,.12)}
+.btn{
+  width:100%;border:none;border-radius:16px;padding:17px;
+  font-size:18px;font-weight:900;color:white;
+  background:linear-gradient(90deg,#0079a7,#00d9ff);
+  cursor:pointer;margin-top:12px;
+  box-shadow:0 8px 22px rgba(0,217,255,.22);
+}
+.btn:active{transform:scale(.985)}
+.btn.secondary{
+  background:#0b1b2d;border:1px solid var(--border2);
+  color:var(--cyan);box-shadow:none;
+}
+.btn.green{background:linear-gradient(90deg,#00a66d,#00e096)}
+.btn.red{background:linear-gradient(90deg,#b3132f,#ff3b5c)}
+.small{font-size:12px;color:var(--muted);line-height:1.6;margin-top:9px}
+.qgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}
+.qbtn{
+  padding:11px;border-radius:12px;border:1px solid var(--border2);
+  background:#0b1b2d;color:var(--muted);font-weight:800;text-align:center;font-size:13px;
+}
+.imgbox{margin-top:12px;border-radius:16px;overflow:hidden;background:#02070c;border:1px solid var(--border)}
+.imgbox img,.imgbox canvas{width:100%;display:block}
+.tools{display:flex;gap:8px;overflow-x:auto;padding:10px 0 2px}
+.tools::-webkit-scrollbar{display:none}
+.tbtn{
+  flex-shrink:0;border:1px solid var(--border2);background:#0b1b2d;
+  color:var(--muted);border-radius:999px;padding:9px 14px;font-size:13px;font-weight:900;
+}
+.tbtn.on{background:var(--cyan);color:#001018;border-color:var(--cyan)}
+.slider-row{display:grid;grid-template-columns:90px 1fr 48px;gap:10px;align-items:center;margin:9px 0}
+.slider-row label{font-size:12px;color:var(--muted);font-weight:800}
+.slider-row span{font-size:12px;color:var(--cyan);text-align:right;font-weight:900}
+input[type=range]{padding:0;height:6px;accent-color:var(--cyan)}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.metric{
+  background:#071320;border:1px solid var(--border);
+  border-radius:16px;padding:13px;text-align:center;
+}
+.metric .v{font-size:25px;font-weight:1000}
+.metric .l{font-size:11px;color:var(--muted);margin-top:3px}
+#result{margin-top:16px}
 .result{
-  margin-top:18px;padding:16px;border-radius:14px;background:#102235;
-  line-height:1.7;white-space:pre-wrap;border:1px solid #24527b;
+  padding:18px;border-radius:18px;background:#0d1d30;border:1px solid var(--border);
+  line-height:1.75;white-space:pre-wrap;font-size:15px;
 }
-.err{background:#3a0f17;border-color:var(--err)}
-.ok{background:#0f3321;border-color:var(--ok)}
-.small{font-size:13px;color:var(--muted);line-height:1.6}
-.badge{display:inline-block;padding:4px 10px;border-radius:999px;border:1px solid #736600;color:#ffd900;font-weight:bold;font-size:12px}
+.err{background:#34101a;border-color:var(--red)}
+.ok{background:#0b2d20;border-color:rgba(0,224,150,.6)}
+.warn{background:#30240c;border-color:rgba(255,159,26,.6)}
+.riskbar{
+  height:16px;background:#071320;border-radius:999px;border:1px solid var(--border);
+  overflow:hidden;margin:10px 0 6px;
+}
+.riskfill{height:100%;width:0;background:linear-gradient(90deg,var(--green),var(--yellow),var(--orange),var(--red));transition:.5s}
+.zonegrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:12px}
+.zone{
+  aspect-ratio:1.8/1;border:1px solid var(--border2);border-radius:10px;
+  display:flex;align-items:center;justify-content:center;color:var(--muted);
+  font-size:12px;background:#081521;font-weight:900;
+}
+.zone.hot{border-color:var(--orange);color:var(--orange);background:rgba(255,159,26,.08)}
+.zone.bad{border-color:var(--red);color:var(--red);background:rgba(255,59,92,.08)}
+.zone.ok{border-color:var(--green);color:var(--green);background:rgba(0,224,150,.06)}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hidden{display:none}
+pre{white-space:pre-wrap}
 </style>
 </head>
 <body>
 
-<h1>📦 X-Ray Cargo Inspector V8 Pro <span class="badge">AUTO MODEL</span></h1>
-<div class="sub">Bản sửa lỗi: tự dò model Gemini hỗ trợ ảnh, không còn phụ thuộc gemini-1.5-flash-latest.</div>
-
-<div class="card">
-  <h3>0. Gemini API Key</h3>
-  <input id="apiKey" placeholder="AIza..." type="password">
-  <button onclick="saveKey()">Lưu API Key</button>
-  <button class="secondary" onclick="testModels()">Kiểm tra model khả dụng</button>
-  <div class="small">Nếu từng nhập key cũ, bấm lưu key mới để ghi đè localStorage.</div>
+<div class="header">
+  <div class="hrow">
+    <div class="logo">📦</div>
+    <div>
+      <div class="htitle">X-Ray Cargo Inspector V9 Pro Max</div>
+      <div class="hsub">Enhanced X-ray · Color AI · Risk Engine · Hải quan</div>
+    </div>
+    <div class="badge">V9 MAX</div>
+  </div>
 </div>
 
-<div class="card">
-  <h3>1. Manifest / Tờ khai</h3>
-  <textarea id="manifest" rows="5" placeholder="Nhập thông tin manifest / tờ khai..."></textarea>
-</div>
+<div class="wrap">
 
-<div class="card">
-  <h3>2. Ảnh X-Ray</h3>
-  <input type="file" accept="image/*" id="fileInput">
-  <img id="preview" style="display:none;">
-  <button onclick="analyze()">Phân tích ảnh X-ray</button>
-</div>
+  <div class="steps">
+    <div class="step on">SETUP</div>
+    <div class="step">MANIFEST</div>
+    <div class="step">ẢNH SOI</div>
+    <div class="step">KẾT QUẢ</div>
+  </div>
 
-<div id="result"></div>
+  <div class="card">
+    <div class="chd"><div class="num">0</div><div class="ctitle">Cài đặt Gemini API</div></div>
+    <input id="apiKey" placeholder="AIza..." type="password">
+    <button class="btn" onclick="saveKey()">Lưu API Key</button>
+    <button class="btn secondary" onclick="testModels()">Kiểm tra model khả dụng</button>
+    <div class="small">Bản V9 tự dò model Gemini có hỗ trợ generateContent. Key chỉ lưu trên máy bằng localStorage.</div>
+  </div>
+
+  <div class="card">
+    <div class="chd"><div class="num">1</div><div class="ctitle">Manifest / Tờ khai</div></div>
+    <textarea id="manifest" rows="5" placeholder="Nhập thông tin khai báo: tên hàng, HS, số lượng, trọng lượng, xuất xứ..."></textarea>
+    <div class="qgrid">
+      <div class="qbtn" onclick="fillManifest('machinery')">Máy móc</div>
+      <div class="qbtn" onclick="fillManifest('vehicle')">Xe / phương tiện</div>
+      <div class="qbtn" onclick="fillManifest('textile')">Dệt may</div>
+      <div class="qbtn" onclick="fillManifest('chemical')">Hóa chất</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="chd"><div class="num">2</div><div class="ctitle">Ảnh X-ray + tăng cường màu</div></div>
+    <input type="file" accept="image/*" id="fileInput">
+    <div class="imgbox hidden" id="imgBox">
+      <canvas id="canvas"></canvas>
+    </div>
+    <div class="tools">
+      <button class="tbtn on" onclick="setPreset('original',this)">Gốc</button>
+      <button class="tbtn" onclick="setPreset('xray',this)">X-ray rõ nét</button>
+      <button class="tbtn" onclick="setPreset('color',this)">Màu vật liệu</button>
+      <button class="tbtn" onclick="setPreset('edge',this)">Viền</button>
+      <button class="tbtn" onclick="setPreset('density',this)">Mật độ</button>
+      <button class="tbtn" onclick="rotateImage()">Xoay 90°</button>
+    </div>
+
+    <div class="slider-row">
+      <label>Tương phản</label><input id="contrast" type="range" min="50" max="220" value="125" oninput="renderCanvas()"><span id="cv">125</span>
+    </div>
+    <div class="slider-row">
+      <label>Độ sáng</label><input id="bright" type="range" min="40" max="180" value="105" oninput="renderCanvas()"><span id="bv">105</span>
+    </div>
+    <div class="slider-row">
+      <label>Sắc nét</label><input id="sharp" type="range" min="0" max="100" value="35" oninput="renderCanvas()"><span id="sv">35</span>
+    </div>
+
+    <button class="btn secondary" onclick="downloadEnhanced()">Tải ảnh đã tăng cường</button>
+    <button class="btn" onclick="analyze()">Phân tích ảnh X-ray V9 Pro Max</button>
+  </div>
+
+  <div class="card hidden" id="localCard">
+    <div class="chd"><div class="num">3</div><div class="ctitle">Phân tích kỹ thuật ảnh tại máy</div></div>
+    <div class="grid3">
+      <div class="metric"><div class="v" id="mContrast">0</div><div class="l">Tương phản</div></div>
+      <div class="metric"><div class="v" id="mDensity">0</div><div class="l">Vùng đậm</div></div>
+      <div class="metric"><div class="v" id="mEdges">0</div><div class="l">Viền vật thể</div></div>
+    </div>
+    <div class="riskbar"><div class="riskfill" id="riskFill"></div></div>
+    <div class="small" id="riskText">Risk score: 0/100</div>
+    <div class="zonegrid" id="zoneGrid"></div>
+  </div>
+
+  <div id="result"></div>
+
+  <div class="card hidden" id="decisionCard">
+    <div class="chd"><div class="num">4</div><div class="ctitle">Quyết định cán bộ</div></div>
+    <textarea id="note" rows="4" placeholder="Ghi chú nghiệp vụ..."></textarea>
+    <div class="actions">
+      <button class="btn green" onclick="decide('THÔNG QUAN')">THÔNG QUAN</button>
+      <button class="btn red" onclick="decide('GIỮ KIỂM TRA')">GIỮ KIỂM TRA</button>
+    </div>
+    <button class="btn secondary" onclick="copyReport()">Copy báo cáo</button>
+    <div id="decisionResult" class="result hidden"></div>
+  </div>
+
+</div>
 
 <script>
-let imageBase64 = '';
-let imageMime = 'image/jpeg';
+let originalImg = new Image();
+let hasImage = false;
+let rotation = 0;
+let currentPreset = 'original';
+let lastAiText = '';
+let localScore = 0;
 
 const MODEL_CANDIDATES = [
   'gemini-3-flash-preview',
@@ -81,158 +259,282 @@ const MODEL_CANDIDATES = [
   'gemini-1.5-flash-002'
 ];
 
-window.addEventListener('DOMContentLoaded', () => {
-  const old = localStorage.getItem('gemini_key') || '';
-  if(old) document.getElementById('apiKey').value = old;
+const tpls = {
+  machinery:'01 UNIT USED EXCAVATOR / MACHINERY\nHS CODE: 8429.52.00\nWEIGHT: 18,500 KGS\nORIGIN: JAPAN',
+  vehicle:'02 UNITS VEHICLE / CAR\nHS CODE: 8703\nWEIGHT: 3,600 KGS\nORIGIN: KOREA',
+  textile:'500 CARTONS GARMENT\nHS CODE: 6205\nWEIGHT: 8,500 KGS\nMADE IN VIETNAM',
+  chemical:'20 DRUMS WATER-BASED PAINT\nHS CODE: 3209\n200 KG/DRUM\nNON-HAZARDOUS'
+};
+
+function fillManifest(k){document.getElementById('manifest').value = tpls[k] || ''}
+
+window.addEventListener('DOMContentLoaded',()=>{
+  const k = localStorage.getItem('gemini_key') || '';
+  if(k) document.getElementById('apiKey').value = k;
+  buildZones([]);
 });
 
-document.getElementById('fileInput').addEventListener('change', function(e){
-  const file = e.target.files[0];
-  if(!file) return;
-  imageMime = file.type || 'image/jpeg';
-
-  const reader = new FileReader();
-  reader.onload = function(ev){
-    imageBase64 = ev.target.result.split(',')[1];
-    const img = document.getElementById('preview');
-    img.src = ev.target.result;
-    img.style.display = 'block';
+document.getElementById('fileInput').addEventListener('change', e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    originalImg.onload=()=>{
+      hasImage=true;
+      document.getElementById('imgBox').classList.remove('hidden');
+      document.getElementById('localCard').classList.remove('hidden');
+      renderCanvas();
+    };
+    originalImg.src=ev.target.result;
   };
-  reader.readAsDataURL(file);
+  r.readAsDataURL(f);
 });
 
 function saveKey(){
-  const key = document.getElementById('apiKey').value.trim();
-  if(!key.startsWith('AIza')){
-    alert('Key chưa đúng định dạng. Key Gemini thường bắt đầu bằng AIza');
-    return;
-  }
-  localStorage.setItem('gemini_key', key);
-  alert('Đã lưu API Key mới');
+  const key=document.getElementById('apiKey').value.trim();
+  if(!key.startsWith('AIza')){alert('Key Gemini thường bắt đầu bằng AIza');return}
+  localStorage.setItem('gemini_key',key);
+  alert('Đã lưu API Key');
 }
-
 function getKey(){
-  const k = document.getElementById('apiKey').value.trim() || localStorage.getItem('gemini_key') || '';
-  if(k) localStorage.setItem('gemini_key', k);
+  const k=document.getElementById('apiKey').value.trim() || localStorage.getItem('gemini_key') || '';
+  if(k) localStorage.setItem('gemini_key',k);
   return k;
 }
 
+function setPreset(p,btn){
+  currentPreset=p;
+  document.querySelectorAll('.tbtn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  if(p==='xray'){contrast.value=155;bright.value=108;sharp.value=55}
+  if(p==='color'){contrast.value=145;bright.value=110;sharp.value=40}
+  if(p==='edge'){contrast.value=190;bright.value=95;sharp.value=85}
+  if(p==='density'){contrast.value=175;bright.value=85;sharp.value=45}
+  if(p==='original'){contrast.value=100;bright.value=100;sharp.value=0}
+  renderCanvas();
+}
+function rotateImage(){rotation=(rotation+90)%360;renderCanvas()}
+
+function renderCanvas(){
+  if(!hasImage)return;
+  const c=document.getElementById('canvas'), ctx=c.getContext('2d');
+  const maxW=1200;
+  let w=originalImg.width,h=originalImg.height;
+  if(w>maxW){h=Math.round(h*maxW/w);w=maxW}
+  if(rotation%180){c.width=h;c.height=w}else{c.width=w;c.height=h}
+  ctx.save();
+  if(rotation===90){ctx.translate(c.width,0);ctx.rotate(Math.PI/2)}
+  if(rotation===180){ctx.translate(c.width,c.height);ctx.rotate(Math.PI)}
+  if(rotation===270){ctx.translate(0,c.height);ctx.rotate(3*Math.PI/2)}
+  ctx.drawImage(originalImg,0,0,w,h);
+  ctx.restore();
+
+  let img=ctx.getImageData(0,0,c.width,c.height);
+  let d=img.data;
+  let contrastVal=Number(contrast.value);
+  let brightVal=Number(bright.value);
+  let factor=(259*(contrastVal+255))/(255*(259-contrastVal));
+  let dark=0, edge=0, sum=0, sum2=0;
+
+  for(let i=0;i<d.length;i+=4){
+    let r=d[i],g=d[i+1],b=d[i+2];
+    let gray=0.299*r+0.587*g+0.114*b;
+    gray=factor*(gray-128)+128;
+    gray=gray*brightVal/100;
+    gray=Math.max(0,Math.min(255,gray));
+    let nr=gray,ng=gray,nb=gray;
+
+    if(currentPreset==='color'){
+      if(gray<65){nr=30;ng=70;nb=180}
+      else if(gray<130){nr=0;ng=210;nb=220}
+      else if(gray<190){nr=255;ng=160;nb=20}
+      else {nr=255;ng=245;nb=180}
+    }
+    if(currentPreset==='density'){
+      nr=255-gray; ng=Math.max(0,180-gray/2); nb=gray/2;
+    }
+    if(currentPreset==='edge'){
+      nr=ng=nb=gray>125?255:0;
+    }
+
+    d[i]=nr;d[i+1]=ng;d[i+2]=nb;
+    if(gray<80) dark++;
+    sum+=gray; sum2+=gray*gray;
+  }
+  ctx.putImageData(img,0,0);
+
+  if(Number(sharp.value)>0){
+    ctx.globalAlpha=Number(sharp.value)/100;
+    ctx.filter='contrast(180%)';
+    ctx.drawImage(c,0,0);
+    ctx.filter='none';ctx.globalAlpha=1;
+  }
+
+  document.getElementById('cv').textContent=contrast.value;
+  document.getElementById('bv').textContent=bright.value;
+  document.getElementById('sv').textContent=sharp.value;
+
+  const n=d.length/4;
+  const mean=sum/n;
+  const variance=sum2/n-mean*mean;
+  const std=Math.sqrt(Math.max(0,variance));
+  const darkPct=Math.round(dark/n*100);
+  const edgeScore=Math.min(100,Math.round(std*1.8));
+  const cScore=Math.min(100,Math.round(std*1.5));
+  localScore=Math.min(100,Math.round(darkPct*0.55 + edgeScore*0.35 + (currentPreset==='edge'?8:0)));
+
+  mContrast.textContent=cScore;
+  mDensity.textContent=darkPct+'%';
+  mEdges.textContent=edgeScore;
+  riskFill.style.width=localScore+'%';
+  riskText.textContent='Risk score kỹ thuật ảnh: '+localScore+'/100';
+  analyzeZones();
+}
+
+function analyzeZones(){
+  const c=document.getElementById('canvas'), ctx=c.getContext('2d');
+  const w=c.width,h=c.height;
+  const zones=[];
+  for(let gy=0;gy<3;gy++){
+    for(let gx=0;gx<3;gx++){
+      const x=Math.floor(gx*w/3), y=Math.floor(gy*h/3);
+      const ww=Math.floor(w/3), hh=Math.floor(h/3);
+      const img=ctx.getImageData(x,y,ww,hh).data;
+      let dark=0,total=img.length/4;
+      for(let i=0;i<img.length;i+=4){
+        const gray=(img[i]+img[i+1]+img[i+2])/3;
+        if(gray<85) dark++;
+      }
+      zones.push(Math.round(dark/total*100));
+    }
+  }
+  buildZones(zones);
+}
+function buildZones(zones){
+  const names=['Trên trái','Trên giữa','Trên phải','Giữa trái','Trung tâm','Giữa phải','Dưới trái','Dưới giữa','Dưới phải'];
+  zoneGrid.innerHTML=names.map((n,i)=>{
+    const v=zones[i]??0;
+    const cls=v>22?'bad':v>10?'hot':'ok';
+    return `<div class="zone ${cls}">${n}<br>${v}%</div>`;
+  }).join('');
+}
+
+function canvasBase64(){
+  return document.getElementById('canvas').toDataURL('image/jpeg',0.9).split(',')[1];
+}
+function downloadEnhanced(){
+  if(!hasImage)return;
+  const a=document.createElement('a');
+  a.href=document.getElementById('canvas').toDataURL('image/jpeg',0.92);
+  a.download='xray_enhanced_v9.jpg';
+  a.click();
+}
+
 async function listModels(key){
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
-  const data = await res.json();
+  const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
+  const data=await res.json();
   if(data.error) throw new Error(data.error.message);
-  const models = (data.models || [])
-    .filter(m => (m.supportedGenerationMethods || []).includes('generateContent'))
-    .map(m => m.name.replace('models/',''));
-  return models;
+  return (data.models||[])
+    .filter(m=>(m.supportedGenerationMethods||[]).includes('generateContent'))
+    .map(m=>m.name.replace('models/',''));
 }
-
 async function testModels(){
-  const result = document.getElementById('result');
-  const key = getKey();
-  if(!key){
-    result.innerHTML = '<div class="result err">Chưa nhập API key.</div>';
-    return;
-  }
-  result.innerHTML = '<div class="result">Đang kiểm tra model khả dụng...</div>';
+  const result=document.getElementById('result');
+  const key=getKey();
+  if(!key){result.innerHTML='<div class="result err">Chưa nhập API key.</div>';return}
+  result.innerHTML='<div class="result">Đang kiểm tra model...</div>';
   try{
-    const models = await listModels(key);
-    result.innerHTML = `<div class="result ok"><b>Model generateContent khả dụng:</b>\n\n${models.join('\n')}</div>`;
+    const models=await listModels(key);
+    result.innerHTML=`<div class="result ok"><b>Model khả dụng:</b>\n\n${models.join('\n')}</div>`;
   }catch(e){
-    result.innerHTML = `<div class="result err"><b>Lỗi kiểm tra model/API key:</b>\n\n${e.message}</div>`;
+    result.innerHTML=`<div class="result err"><b>Lỗi:</b>\n\n${e.message}</div>`;
   }
 }
+async function callGeminiModel(key,model,manifest){
+  const prompt=`Bạn là chuyên gia phân tích ảnh soi chiếu container hỗ trợ cán bộ Hải quan Việt Nam.
 
-async function callGeminiModel(key, model, manifest){
-  const prompt =
-`Bạn là chuyên gia phân tích ảnh soi chiếu container hỗ trợ cán bộ Hải quan Việt Nam.
+DỮ LIỆU KỸ THUẬT ẢNH DO ỨNG DỤNG TÍNH:
+- Risk score kỹ thuật ảnh: ${localScore}/100
+- Chế độ ảnh đang gửi: ${currentPreset}
 
 THÔNG TIN MANIFEST / TỜ KHAI:
 ${manifest || 'Chưa nhập manifest.'}
 
-Hãy phân tích theo cấu trúc:
-1. Nhận diện vật thể chính trong ảnh X-ray.
-2. Vị trí, hình dạng, mật độ tương đối, điểm bất thường.
-3. Đối chiếu với manifest: phù hợp / chưa phù hợp / cần thêm thông tin.
-4. Điểm nghi vấn cần kiểm tra thực tế.
-5. Kết luận: THÔNG QUAN / CẦN ĐỐI CHIẾU THÊM / GIỮ KIỂM TRA.
+YÊU CẦU PHÂN TÍCH NÂNG CAO:
+1. Nhận diện vật thể chính: hình dạng, vị trí, kích thước tương đối.
+2. Phân tích mật độ X-ray: vùng đậm, vùng rỗng, vật thể kim loại/dạng khung/dạng thùng.
+3. Đối chiếu manifest: phù hợp, chưa phù hợp, cần thêm thông tin.
+4. Dấu hiệu nghiệp vụ cần chú ý: che giấu, khoang rỗng, lớp hàng bất thường, vật thể không đồng nhất.
+5. Chấm điểm rủi ro tổng hợp 0-100.
+6. Kết luận: THÔNG QUAN / CẦN ĐỐI CHIẾU THÊM / GIỮ KIỂM TRA.
+7. Đưa checklist kiểm tra thực tế nếu cần.
 
-Trả lời tiếng Việt, thực tế nghiệp vụ, không khẳng định quá mức nếu ảnh không đủ rõ.`;
+Trả lời tiếng Việt, rõ ràng, thực tế, không khẳng định quá mức nếu ảnh không đủ rõ.`;
 
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
-    {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        contents:[{
-          parts:[
-            {inline_data:{mime_type:imageMime, data:imageBase64}},
-            {text:prompt}
-          ]
-        }],
-        generationConfig:{temperature:0.2, maxOutputTokens:1500}
-      })
-    }
-  );
-
-  const data = await res.json();
+  const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      contents:[{parts:[
+        {inline_data:{mime_type:'image/jpeg',data:canvasBase64()}},
+        {text:prompt}
+      ]}],
+      generationConfig:{temperature:0.2,maxOutputTokens:2200}
+    })
+  });
+  const data=await res.json();
   if(data.error) throw new Error(`[${model}] ${data.error.message}`);
   return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 }
-
 async function analyze(){
-  const result = document.getElementById('result');
-  const key = getKey();
-  const manifest = document.getElementById('manifest').value.trim();
+  const result=document.getElementById('result');
+  const key=getKey();
+  const manifest=document.getElementById('manifest').value.trim();
+  if(!key){result.innerHTML='<div class="result err">Chưa nhập API key.</div>';return}
+  if(!hasImage){result.innerHTML='<div class="result err">Chưa chọn ảnh X-ray.</div>';return}
 
-  if(!key){
-    result.innerHTML = '<div class="result err">Chưa có API key.</div>';
-    return;
-  }
-  if(!imageBase64){
-    result.innerHTML = '<div class="result err">Chưa chọn ảnh.</div>';
-    return;
-  }
+  result.innerHTML='<div class="result">Đang dò model Gemini và phân tích ảnh tăng cường...</div>';
+  let available=[];
+  try{available=await listModels(key)}
+  catch(e){result.innerHTML=`<div class="result err"><b>Lỗi API:</b>\n\n${e.message}</div>`;return}
 
-  result.innerHTML = '<div class="result">Đang dò model Gemini và phân tích ảnh...</div>';
-
-  let available = [];
-  try{
-    available = await listModels(key);
-  }catch(e){
-    result.innerHTML = `<div class="result err"><b>Lỗi API key hoặc quyền truy cập:</b>\n\n${e.message}</div>`;
-    return;
-  }
-
-  const tryList = MODEL_CANDIDATES.filter(m => available.includes(m));
-  const finalList = tryList.length ? tryList : available;
-
-  let lastErr = '';
+  const finalList=MODEL_CANDIDATES.filter(m=>available.includes(m));
+  let lastErr='';
   for(const model of finalList){
     try{
-      result.innerHTML = `<div class="result">Đang thử model: ${model}...</div>`;
-      const text = await callGeminiModel(key, model, manifest);
+      result.innerHTML=`<div class="result">Đang phân tích bằng model: ${model}...</div>`;
+      const text=await callGeminiModel(key,model,manifest);
       if(text){
-        result.innerHTML = `<div class="result ok"><b>Model dùng được: ${model}</b>\n\n${text}</div>`;
+        lastAiText=text;
+        result.innerHTML=`<div class="result ok"><b>Model dùng được: ${model}</b>\n<b>Risk score kỹ thuật ảnh: ${localScore}/100</b>\n\n${text}</div>`;
+        decisionCard.classList.remove('hidden');
         return;
       }
-    }catch(e){
-      lastErr = e.message;
-      console.warn(e);
-    }
+    }catch(e){lastErr=e.message;console.warn(e)}
   }
+  result.innerHTML=`<div class="result err"><b>Không gọi được model nào.</b>\n\nModel khả dụng:\n${available.join('\n')}\n\nLỗi cuối:\n${lastErr}</div>`;
+}
+function decide(d){
+  const time=new Date().toLocaleString('vi-VN');
+  decisionResult.className='result '+(d==='THÔNG QUAN'?'ok':'err');
+  decisionResult.classList.remove('hidden');
+  decisionResult.textContent=`${d}\nThời gian: ${time}\n\nGhi chú:\n${note.value || '(chưa nhập)'}`;
+}
+function copyReport(){
+  const report=`BÁO CÁO PHÂN TÍCH X-RAY V9 PRO MAX
 
-  result.innerHTML =
-  `<div class="result err"><b>Không gọi được model nào.</b>
+Manifest:
+${manifest.value}
 
-Model khả dụng theo key:
-${available.join('\n')}
+Risk score kỹ thuật ảnh: ${localScore}/100
 
-Lỗi cuối:
-${lastErr}</div>`;
+Kết quả AI:
+${lastAiText}
+
+Ghi chú cán bộ:
+${note.value}
+`;
+  navigator.clipboard.writeText(report).then(()=>alert('Đã copy báo cáo'));
 }
 </script>
-
 </body>
 </html>
