@@ -3,217 +3,234 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>X-Ray Cargo Inspector V8 Pro FIXED</title>
+<title>X-Ray Cargo Inspector V8 Pro Auto Model</title>
 <style>
-body{
-background:#07111d;
-color:white;
-font-family:Arial,sans-serif;
-padding:20px;
-max-width:700px;
-margin:auto;
+:root{
+  --bg:#07111d;--card:#0d1b2a;--bd:#163a5a;--cyan:#00c8f0;
+  --ok:#00d084;--err:#ff3355;--txt:#f2f7ff;--muted:#85a5bf;
 }
+*{box-sizing:border-box}
+body{
+  background:var(--bg);color:var(--txt);font-family:Arial,sans-serif;
+  padding:16px;max-width:760px;margin:auto;
+}
+h1{font-size:24px;margin:10px 0 4px}
+.sub{color:var(--muted);margin-bottom:18px}
 .card{
-background:#0d1b2a;
-border:1px solid #13324f;
-padding:20px;
-border-radius:16px;
-margin-bottom:20px;
+  background:var(--card);border:1px solid var(--bd);
+  padding:18px;border-radius:16px;margin-bottom:16px;
 }
 input,textarea{
-width:100%;
-padding:14px;
-border-radius:12px;
-border:1px solid #1d4d77;
-background:#081521;
-color:white;
-font-size:16px;
-margin-top:10px;
-box-sizing:border-box;
+  width:100%;padding:14px;border-radius:12px;border:1px solid #1d4d77;
+  background:#081521;color:white;font-size:16px;margin-top:8px;
 }
 button{
-width:100%;
-padding:16px;
-border:none;
-border-radius:14px;
-background:#00c8f0;
-color:white;
-font-size:18px;
-font-weight:bold;
-margin-top:15px;
-cursor:pointer;
+  width:100%;padding:16px;border:none;border-radius:14px;
+  background:linear-gradient(90deg,#0088bb,#00d4f5);
+  color:white;font-size:18px;font-weight:bold;margin-top:14px;cursor:pointer;
 }
-img{
-max-width:100%;
-border-radius:12px;
-margin-top:15px;
-}
+button.secondary{background:#102235;border:1px solid #24527b;color:#00d4f5}
+img{max-width:100%;border-radius:12px;margin-top:12px}
 .result{
-margin-top:20px;
-padding:15px;
-border-radius:12px;
-background:#102235;
-line-height:1.7;
-white-space:pre-wrap;
+  margin-top:18px;padding:16px;border-radius:14px;background:#102235;
+  line-height:1.7;white-space:pre-wrap;border:1px solid #24527b;
 }
-.err{
-background:#3a0f17;
-border:1px solid #ff3355;
-}
-.ok{
-background:#0f3321;
-border:1px solid #00d084;
-}
+.err{background:#3a0f17;border-color:var(--err)}
+.ok{background:#0f3321;border-color:var(--ok)}
+.small{font-size:13px;color:var(--muted);line-height:1.6}
+.badge{display:inline-block;padding:4px 10px;border-radius:999px;border:1px solid #736600;color:#ffd900;font-weight:bold;font-size:12px}
 </style>
 </head>
 <body>
 
-<h1>📦 X-Ray Cargo Inspector V8 Pro FIXED</h1>
+<h1>📦 X-Ray Cargo Inspector V8 Pro <span class="badge">AUTO MODEL</span></h1>
+<div class="sub">Bản sửa lỗi: tự dò model Gemini hỗ trợ ảnh, không còn phụ thuộc gemini-1.5-flash-latest.</div>
 
 <div class="card">
-<h3>Gemini API Key</h3>
-<input id="apiKey" placeholder="AIza..." type="password">
-<button onclick="saveKey()">Lưu API Key</button>
+  <h3>0. Gemini API Key</h3>
+  <input id="apiKey" placeholder="AIza..." type="password">
+  <button onclick="saveKey()">Lưu API Key</button>
+  <button class="secondary" onclick="testModels()">Kiểm tra model khả dụng</button>
+  <div class="small">Nếu từng nhập key cũ, bấm lưu key mới để ghi đè localStorage.</div>
 </div>
 
 <div class="card">
-<h3>Manifest / Tờ khai</h3>
-<textarea id="manifest" rows="5" placeholder="Nhập thông tin manifest"></textarea>
+  <h3>1. Manifest / Tờ khai</h3>
+  <textarea id="manifest" rows="5" placeholder="Nhập thông tin manifest / tờ khai..."></textarea>
 </div>
 
 <div class="card">
-<h3>Ảnh X-Ray</h3>
-<input type="file" accept="image/*" id="fileInput">
-<img id="preview" style="display:none;">
-<button onclick="analyze()">Phân tích ảnh X-ray</button>
+  <h3>2. Ảnh X-Ray</h3>
+  <input type="file" accept="image/*" id="fileInput">
+  <img id="preview" style="display:none;">
+  <button onclick="analyze()">Phân tích ảnh X-ray</button>
 </div>
 
 <div id="result"></div>
 
 <script>
 let imageBase64 = '';
+let imageMime = 'image/jpeg';
+
+const MODEL_CANDIDATES = [
+  'gemini-3-flash-preview',
+  'gemini-2.5-flash',
+  'gemini-2.5-flash-lite',
+  'gemini-2.0-flash',
+  'gemini-1.5-flash',
+  'gemini-1.5-flash-002'
+];
+
+window.addEventListener('DOMContentLoaded', () => {
+  const old = localStorage.getItem('gemini_key') || '';
+  if(old) document.getElementById('apiKey').value = old;
+});
 
 document.getElementById('fileInput').addEventListener('change', function(e){
-    const file = e.target.files[0];
-    if(!file) return;
+  const file = e.target.files[0];
+  if(!file) return;
+  imageMime = file.type || 'image/jpeg';
 
-    const reader = new FileReader();
-
-    reader.onload = function(ev){
-        imageBase64 = ev.target.result.split(',')[1];
-
-        const img = document.getElementById('preview');
-        img.src = ev.target.result;
-        img.style.display = 'block';
-    };
-
-    reader.readAsDataURL(file);
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    imageBase64 = ev.target.result.split(',')[1];
+    const img = document.getElementById('preview');
+    img.src = ev.target.result;
+    img.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
 });
 
 function saveKey(){
-    const key = document.getElementById('apiKey').value.trim();
+  const key = document.getElementById('apiKey').value.trim();
+  if(!key.startsWith('AIza')){
+    alert('Key chưa đúng định dạng. Key Gemini thường bắt đầu bằng AIza');
+    return;
+  }
+  localStorage.setItem('gemini_key', key);
+  alert('Đã lưu API Key mới');
+}
 
-    localStorage.setItem('gemini_key', key);
+function getKey(){
+  const k = document.getElementById('apiKey').value.trim() || localStorage.getItem('gemini_key') || '';
+  if(k) localStorage.setItem('gemini_key', k);
+  return k;
+}
 
-    alert('Đã lưu API Key');
+async function listModels(key){
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
+  const data = await res.json();
+  if(data.error) throw new Error(data.error.message);
+  const models = (data.models || [])
+    .filter(m => (m.supportedGenerationMethods || []).includes('generateContent'))
+    .map(m => m.name.replace('models/',''));
+  return models;
+}
+
+async function testModels(){
+  const result = document.getElementById('result');
+  const key = getKey();
+  if(!key){
+    result.innerHTML = '<div class="result err">Chưa nhập API key.</div>';
+    return;
+  }
+  result.innerHTML = '<div class="result">Đang kiểm tra model khả dụng...</div>';
+  try{
+    const models = await listModels(key);
+    result.innerHTML = `<div class="result ok"><b>Model generateContent khả dụng:</b>\n\n${models.join('\n')}</div>`;
+  }catch(e){
+    result.innerHTML = `<div class="result err"><b>Lỗi kiểm tra model/API key:</b>\n\n${e.message}</div>`;
+  }
+}
+
+async function callGeminiModel(key, model, manifest){
+  const prompt =
+`Bạn là chuyên gia phân tích ảnh soi chiếu container hỗ trợ cán bộ Hải quan Việt Nam.
+
+THÔNG TIN MANIFEST / TỜ KHAI:
+${manifest || 'Chưa nhập manifest.'}
+
+Hãy phân tích theo cấu trúc:
+1. Nhận diện vật thể chính trong ảnh X-ray.
+2. Vị trí, hình dạng, mật độ tương đối, điểm bất thường.
+3. Đối chiếu với manifest: phù hợp / chưa phù hợp / cần thêm thông tin.
+4. Điểm nghi vấn cần kiểm tra thực tế.
+5. Kết luận: THÔNG QUAN / CẦN ĐỐI CHIẾU THÊM / GIỮ KIỂM TRA.
+
+Trả lời tiếng Việt, thực tế nghiệp vụ, không khẳng định quá mức nếu ảnh không đủ rõ.`;
+
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+    {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        contents:[{
+          parts:[
+            {inline_data:{mime_type:imageMime, data:imageBase64}},
+            {text:prompt}
+          ]
+        }],
+        generationConfig:{temperature:0.2, maxOutputTokens:1500}
+      })
+    }
+  );
+
+  const data = await res.json();
+  if(data.error) throw new Error(`[${model}] ${data.error.message}`);
+  return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 }
 
 async function analyze(){
+  const result = document.getElementById('result');
+  const key = getKey();
+  const manifest = document.getElementById('manifest').value.trim();
 
-    const result = document.getElementById('result');
+  if(!key){
+    result.innerHTML = '<div class="result err">Chưa có API key.</div>';
+    return;
+  }
+  if(!imageBase64){
+    result.innerHTML = '<div class="result err">Chưa chọn ảnh.</div>';
+    return;
+  }
 
-    result.innerHTML = '<div class="result">Đang phân tích...</div>';
+  result.innerHTML = '<div class="result">Đang dò model Gemini và phân tích ảnh...</div>';
 
-    const key = localStorage.getItem('gemini_key');
+  let available = [];
+  try{
+    available = await listModels(key);
+  }catch(e){
+    result.innerHTML = `<div class="result err"><b>Lỗi API key hoặc quyền truy cập:</b>\n\n${e.message}</div>`;
+    return;
+  }
 
-    if(!key){
-        result.innerHTML = '<div class="result err">Chưa có API key</div>';
-        return;
-    }
+  const tryList = MODEL_CANDIDATES.filter(m => available.includes(m));
+  const finalList = tryList.length ? tryList : available;
 
-    if(!imageBase64){
-        result.innerHTML = '<div class="result err">Chưa chọn ảnh</div>';
-        return;
-    }
-
-    const manifest = document.getElementById('manifest').value;
-
+  let lastErr = '';
+  for(const model of finalList){
     try{
-
-        const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${key}`,
-        {
-            method:'POST',
-            headers:{
-                'Content-Type':'application/json'
-            },
-            body:JSON.stringify({
-                contents:[
-                    {
-                        parts:[
-                            {
-                                inline_data:{
-                                    mime_type:'image/jpeg',
-                                    data:imageBase64
-                                }
-                            },
-                            {
-                                text:
-`Bạn là chuyên gia phân tích ảnh soi chiếu container Hải quan Việt Nam.
-
-Manifest:
-${manifest}
-
-Hãy:
-1. Nhận diện vật thể trong ảnh
-2. Đánh giá phù hợp manifest
-3. Nêu điểm nghi vấn
-4. Kết luận thông quan hay giữ kiểm tra
-
-Trả lời tiếng Việt rõ ràng.`
-                            }
-                        ]
-                    }
-                ],
-                generationConfig:{
-                    temperature:0.2,
-                    maxOutputTokens:1200
-                }
-            })
-        });
-
-        const data = await response.json();
-
-        console.log(data);
-
-        if(data.error){
-
-            result.innerHTML =
-            `<div class="result err">
-<b>Lỗi Gemini API</b>
-
-${data.error.message}
-</div>`;
-
-            return;
-        }
-
-        const text =
-        data.candidates?.[0]?.content?.parts?.[0]?.text
-        || 'Không có kết quả';
-
-        result.innerHTML =
-        `<div class="result ok">${text}</div>`;
-
-    }catch(err){
-
-        result.innerHTML =
-        `<div class="result err">
-<b>Lỗi kết nối</b>
-
-${err.message}
-</div>`;
+      result.innerHTML = `<div class="result">Đang thử model: ${model}...</div>`;
+      const text = await callGeminiModel(key, model, manifest);
+      if(text){
+        result.innerHTML = `<div class="result ok"><b>Model dùng được: ${model}</b>\n\n${text}</div>`;
+        return;
+      }
+    }catch(e){
+      lastErr = e.message;
+      console.warn(e);
     }
+  }
+
+  result.innerHTML =
+  `<div class="result err"><b>Không gọi được model nào.</b>
+
+Model khả dụng theo key:
+${available.join('\n')}
+
+Lỗi cuối:
+${lastErr}</div>`;
 }
 </script>
 
