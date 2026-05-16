@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>X-Ray Cargo Analyzer V8</title>
+<style>
+:root {
+  --bg: #0a0e1a;
+  --bg2: #111827;
+  --bg3: #1a2235;
+  --card: #162032;
+  --border: #1e3a5f;
+  --accent: #00d4ff;
+  --accent2: #0099cc;
+  --green: #00e676;
+  --orange: #ff9800;
+  --red: #ff3d3d;
+  --yellow: #ffd600;
+  --text: #e8f4fd;
+  --text2: #8baabf;
+  --radius: 12px;
+  --font: 'SF Pro Display', -apple-system, 'Segoe UI', sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  min-height: 100vh;
+  padding-bottom: 40px;
+}
+
+/* HEADER */
+.header {
+  background: linear-gradient(135deg, #0d1b2a 0%, #162032 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 20px 12px;
+  position: sticky; top: 0; z-index: 100;
+  backdrop-filter: blur(10px);
+}
+.header-title {
+  font-size: 18px; font-weight: 700; letter-spacing: -0.3px;
+  color: var(--accent);
+}
+.header-sub {
+  font-size: 11px; color: var(--text2); margin-top: 2px;
+}
+
+/* MAIN */
+.container { padding: 16px; max-width: 600px; margin: 0 auto; }
+
+/* CARD */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 14px;
+}
+.card-title {
+  font-size: 13px; font-weight: 600;
+  color: var(--accent); text-transform: uppercase;
+  letter-spacing: 0.8px; margin-bottom: 12px;
+  display: flex; align-items: center; gap: 6px;
+}
+
+/* TEXTAREA */
+textarea {
+  width: 100%; background: var(--bg3);
+  border: 1px solid var(--border); border-radius: 8px;
+  color: var(--text); font-family: var(--font);
+  font-size: 14px; padding: 12px; resize: vertical;
+  min-height: 90px; outline: none;
+  transition: border-color 0.2s;
+}
+textarea:focus { border-color: var(--accent); }
+
+/* SELECT */
+select {
+  width: 100%; background: var(--bg3);
+  border: 1px solid var(--border); border-radius: 8px;
+  color: var(--text); font-family: var(--font);
+  font-size: 14px; padding: 10px 12px;
+  outline: none; margin-top: 8px;
+  -webkit-appearance: none; appearance: none;
+}
+
+/* UPLOAD */
+.upload-area {
+  border: 2px dashed var(--border); border-radius: var(--radius);
+  padding: 28px 16px; text-align: center; cursor: pointer;
+  transition: all 0.2s; position: relative;
+  background: var(--bg3);
+}
+.upload-area:active { border-color: var(--accent); background: rgba(0,212,255,0.05); }
+.upload-area input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.upload-icon { font-size: 36px; margin-bottom: 8px; }
+.upload-text { font-size: 15px; font-weight: 600; color: var(--text); }
+.upload-sub { font-size: 12px; color: var(--text2); margin-top: 4px; }
+
+/* PREVIEW */
+.preview-wrap { position: relative; border-radius: 8px; overflow: hidden; background: #000; }
+.preview-wrap img, .preview-wrap canvas {
+  width: 100%; display: block; border-radius: 8px;
+}
+.canvas-overlay {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  border-radius: 8px;
+}
+
+/* TABS */
+.tabs { display: flex; gap: 4px; margin-bottom: 12px; overflow-x: auto; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  flex-shrink: 0;
+  padding: 7px 14px; border-radius: 20px; font-size: 12px;
+  font-weight: 600; cursor: pointer; border: 1px solid var(--border);
+  background: var(--bg3); color: var(--text2);
+  transition: all 0.15s;
+}
+.tab.active {
+  background: var(--accent); color: #000; border-color: var(--accent);
+}
+
+/* BTN */
+.btn {
+  width: 100%; padding: 14px; border-radius: var(--radius);
+  border: none; font-size: 16px; font-weight: 700;
+  cursor: pointer; transition: all 0.15s; font-family: var(--font);
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #000;
+}
+.btn-primary:active { transform: scale(0.97); opacity: 0.9; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* RESULT CARD */
+.result-main {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px; margin-bottom: 14px;
+}
+.metric-box {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 14px;
+}
+.metric-label { font-size: 10px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; }
+.metric-value { font-size: 22px; font-weight: 700; margin-top: 2px; }
+.metric-sub { font-size: 11px; color: var(--text2); margin-top: 2px; }
+
+/* RISK BAR */
+.risk-bar-wrap { margin: 8px 0; }
+.risk-bar-bg {
+  height: 8px; background: var(--bg3);
+  border-radius: 4px; overflow: hidden;
+}
+.risk-bar-fill {
+  height: 100%; border-radius: 4px;
+  transition: width 1s cubic-bezier(.4,0,.2,1);
+}
+
+/* BADGE */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;
+}
+.badge-green { background: rgba(0,230,118,0.15); color: var(--green); }
+.badge-orange { background: rgba(255,152,0,0.15); color: var(--orange); }
+.badge-red { background: rgba(255,61,61,0.15); color: var(--red); }
+.badge-blue { background: rgba(0,212,255,0.12); color: var(--accent); }
+
+/* METRICS LIST */
+.metric-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 0; border-bottom: 1px solid rgba(30,58,95,0.5);
+  font-size: 13px;
+}
+.metric-row:last-child { border-bottom: none; }
+.metric-row-label { color: var(--text2); }
+.metric-row-val { font-weight: 600; color: var(--text); font-size: 13px; }
+
+/* REASONS */
+.reason-item {
+  padding: 8px 12px; margin-bottom: 6px;
+  background: var(--bg3); border-radius: 8px;
+  font-size: 13px; line-height: 1.5;
+  border-left: 3px solid var(--accent);
+}
+.warning-item {
+  padding: 8px 12px; margin-bottom: 6px;
+  background: rgba(255,152,0,0.08); border-radius: 8px;
+  font-size: 12px; line-height: 1.5;
+  border-left: 3px solid var(--orange);
+  color: var(--orange);
+}
+
+/* PROGRESS */
+.spinner {
+  display: none; text-align: center; padding: 30px;
+}
+.spinner.show { display: block; }
+.spin-circle {
+  width: 40px; height: 40px; border: 3px solid var(--border);
+  border-top-color: var(--accent); border-radius: 50%;
+  animation: spin 0.8s linear infinite; margin: 0 auto 12px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* LUT SECTION */
+.lut-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; margin-top: 8px; }
+.lut-btn {
+  padding: 8px 4px; border-radius: 8px; font-size: 11px; font-weight: 600;
+  border: 1px solid var(--border); background: var(--bg3);
+  color: var(--text2); cursor: pointer; text-align: center;
+  transition: all 0.15s;
+}
+.lut-btn.active {
+  border-color: var(--accent); color: var(--accent);
+  background: rgba(0,212,255,0.08);
+}
+
+/* MATCH BOX */
+.match-box {
+  padding: 12px; border-radius: 10px; text-align: center;
+  font-size: 14px; font-weight: 600; margin-bottom: 10px;
+}
+.match-ok { background: rgba(0,230,118,0.1); color: var(--green); border: 1px solid rgba(0,230,118,0.3); }
+.match-bad { background: rgba(255,61,61,0.1); color: var(--red); border: 1px solid rgba(255,61,61,0.3); }
+.match-unknown { background: rgba(0,212,255,0.08); color: var(--accent); border: 1px solid var(--border); }
+
+/* CONCLUSION */
+.conclusion-box {
+  padding: 14px; border-radius: 10px; font-size: 13px; line-height: 1.6;
+  margin-top: 8px;
+}
+.conclusion-high { background: rgba(255,61,61,0.1); border: 1px solid rgba(255,61,61,0.3); }
+.conclusion-mid { background: rgba(255,152,0,0.1); border: 1px solid rgba(255,152,0,0.3); }
+.conclusion-low { background: rgba(0,230,118,0.1); border: 1px solid rgba(0,230,118,0.3); }
+
+/* SECTION TITLE */
+.section-num {
+  display: inline-flex; width: 22px; height: 22px; border-radius: 50%;
+  background: var(--accent); color: #000; font-size: 11px; font-weight: 800;
+  align-items: center; justify-content: center;
+}
+
+/* HIDDEN */
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-title">📦 X-Ray Cargo Analyzer V8</div>
+  <div class="header-sub">15 nguon hoc thuat · WCO · MIT · UCL · BAM · EMPA · CASRA</div>
+</div>
+
+<div class="container">
+
+  <!-- 1. MANIFEST -->
+  <div class="card">
+    <div class="card-title"><span class="section-num">1</span> Manifest / Khai bao hang hoa</div>
+    <textarea id="manifest" placeholder="Nhap noi dung khai bao hang hoa, ma HS code, ten hang...&#10;Vi du: EXCAVATOR 8429, MACHINERY, FORKLIFT..."></textarea>
+    <select id="inspection-obj" style="margin-top:8px;">
+      <option value="manifest">Manifest Verification</option>
+      <option value="contraband">Contraband Interdiction</option>
+      <option value="homeland">Homeland Security</option>
+    </select>
+  </div>
+
+  <!-- 2. UPLOAD -->
+  <div class="card">
+    <div class="card-title"><span class="section-num">2</span> Upload anh X-ray</div>
+    <div class="upload-area" id="upload-area">
+      <input type="file" id="file-input" accept="image/*" onchange="handleFile(this)">
+      <div class="upload-icon">📷</div>
+      <div class="upload-text">Chon anh X-ray</div>
+      <div class="upload-sub">JPG · PNG · TIFF · Anh tu Camera</div>
+    </div>
+    <canvas id="orig-canvas" style="display:none;width:100%;border-radius:8px;margin-top:10px;"></canvas>
+  </div>
+
+  <!-- ANALYZE BTN -->
+  <button class="btn btn-primary" id="analyze-btn" onclick="runAnalysis()" disabled>
+    Phan tich anh
+  </button>
+
+  <!-- SPINNER -->
+  <div class="spinner" id="spinner">
+    <div class="spin-circle"></div>
+    <div style="font-size:14px;color:var(--text2)">Dang phan tich...</div>
+  </div>
+
+  <!-- RESULTS (hidden until analyzed) -->
+  <div id="results" class="hidden">
+
+    <!-- 3. ANH -->
+    <div class="card" style="margin-top:14px;">
+      <div class="card-title"><span class="section-num">3</span> Hien thi anh</div>
+      <div class="tabs" id="img-tabs">
+        <div class="tab active" onclick="switchImgTab('orig')">Goc</div>
+        <div class="tab" onclick="switchImgTab('marked')">Danh dau</div>
+        <div class="tab" onclick="switchImgTab('heat')">Heatmap</div>
+        <div class="tab" onclick="switchImgTab('log')">Log MIT</div>
+        <div class="tab" onclick="switchImgTab('lut')">LUT Mode</div>
+      </div>
+      <div class="preview-wrap">
+        <canvas id="display-canvas" style="width:100%;display:block;border-radius:8px;"></canvas>
+      </div>
+      <!-- LUT controls -->
+      <div id="lut-controls" class="hidden" style="margin-top:10px;">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:6px;">CHON LUT MODE</div>
+        <div class="lut-grid">
+          <div class="lut-btn active" onclick="applyLUT('gray')">Greyscale</div>
+          <div class="lut-btn" onclick="applyLUT('log')">BW Log</div>
+          <div class="lut-btn" onclick="applyLUT('sqrt')">BW Sqrt</div>
+          <div class="lut-btn" onclick="applyLUT('pseudo')">Pseudo Color</div>
+          <div class="lut-btn" onclick="applyLUT('hist')">Hist Mask</div>
+          <div class="lut-btn" onclick="applyLUT('invert')">Invert</div>
+          <div class="lut-btn" onclick="applyLUT('edge')">Edge E2</div>
+          <div class="lut-btn" onclick="applyLUT('organic')">Organic</div>
+          <div class="lut-btn" onclick="applyLUT('wiener')">Quick Opt</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. TONG QUAN -->
+    <div class="card">
+      <div class="card-title"><span class="section-num">4</span> Ket qua tong quan</div>
+      <div class="result-main">
+        <div class="metric-box">
+          <div class="metric-label">Loai hang</div>
+          <div class="metric-value" id="r-class" style="font-size:16px;">--</div>
+          <div class="metric-sub" id="r-zrange">--</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Do tin cay</div>
+          <div class="metric-value" id="r-conf">--%</div>
+          <div class="metric-sub">Calibrated MIT 2024</div>
+        </div>
+      </div>
+      <div class="metric-box" style="margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div class="metric-label">Diem rui ro</div>
+          <div id="r-risk-badge"></div>
+        </div>
+        <div class="risk-bar-wrap">
+          <div class="risk-bar-bg">
+            <div class="risk-bar-fill" id="r-risk-bar" style="width:0%"></div>
+          </div>
+        </div>
+        <div style="font-size:20px;font-weight:700;margin-top:6px;" id="r-risk-score">0/100</div>
+      </div>
+    </div>
+
+    <!-- 5. SO KHOP MANIFEST -->
+    <div class="card">
+      <div class="card-title"><span class="section-num">5</span> So khop Manifest</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+        <div class="metric-box">
+          <div class="metric-label">Manifest</div>
+          <div class="metric-value" id="r-manifest" style="font-size:14px;">--</div>
+        </div>
+        <div class="metric-box">
+          <div class="metric-label">Anh nhan dang</div>
+          <div class="metric-value" id="r-imgclass" style="font-size:14px;">--</div>
+        </div>
+      </div>
+      <div id="r-match-box" class="match-box match-unknown">Chua co du lieu</div>
+    </div>
+
+    <!-- 6. GIAI THICH RUI RO -->
+    <div class="card">
+      <div class="card-title"><span class="section-num">6</span> Giai thich rui ro</div>
+      <div id="r-reasons"></div>
+    </div>
+
+    <!-- 7. CHI SO KY THUAT -->
+    <div class="card">
+      <div class="card-title"><span class="section-num">7</span> Chi so ky thuat</div>
+      <div class="tabs">
+        <div class="tab active" onclick="switchMetricTab('basic')">Co ban</div>
+        <div class="tab" onclick="switchMetricTab('physics')">Physics</div>
+        <div class="tab" onclick="switchMetricTab('struct')">Cau truc</div>
+      </div>
+      <div id="metrics-basic"></div>
+      <div id="metrics-physics" class="hidden"></div>
+      <div id="metrics-struct" class="hidden"></div>
+    </div>
+
+    <!-- 8. CANH BAO VAT LY -->
+    <div class="card" id="r-warnings-card">
+      <div class="card-title"><span class="section-num">8</span> Canh bao gioi han vat ly</div>
+      <div id="r-warnings"></div>
+      <div style="font-size:11px;color:var(--text2);margin-top:8px;">
+        Nguon: MIT/Lalor 2024 · Kolkoori/BAM 2014 — He thong la cong cu ho tro, khong thay the quyet dinh cua nhan vien.
+      </div>
+    </div>
+
+    <!-- 9. KET LUAN -->
+    <div class="card">
+      <div class="card-title"><span class="section-num">9</span> Ket luan nghiep vu</div>
+      <div id="r-conclusion" class="conclusion-box conclusion-low"></div>
+      <div style="margin-top:10px;font-size:12px;color:var(--text2);">
+        <b style="color:var(--text)">3-Stage Inspection (Hitachi 2004 / Reed/Varian 2008)</b><br>
+        <div id="r-stage" style="margin-top:6px;font-size:13px;line-height:1.6;"></div>
+      </div>
+    </div>
+
+  </div><!-- /results -->
+
+</div><!-- /container -->
+
+<script>
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+let origImageData = null;   // raw pixel data
+let grayData = null;        // grayscale float32
+let W = 0, H = 0;
+let analysisResult = null;
+let currentImgTab = 'orig';
+let currentLUT = 'gray';
+
+// ═══════════════════════════════════════════════════════
+// FILE HANDLING
+// ═══════════════════════════════════════════════════════
+function handleFile(input) {
+  if (!input.files || !input.files[0]) return;
+  const file = input.files[0];
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      // Max dimension 800px for performance
+      let iw = img.width, ih = img.height;
+      const maxD = 800;
+      if (iw > maxD || ih > maxD) {
+        const scale = maxD / Math.max(iw, ih);
+        iw = Math.round(iw * scale);
+        ih = Math.round(ih * scale);
+      }
+      W = iw; H = ih;
+      const c = document.getElementById('orig-canvas');
+      c.width = W; c.height = H;
+      const ctx = c.getContext('2d');
+      ctx.drawImage(img, 0, 0, W, H);
+      origImageData = ctx.getImageData(0, 0, W, H);
+      // Compute grayscale
+      grayData = computeGray(origImageData);
+      // Show preview
+      c.style.display = 'block';
+      const dc = document.getElementById('display-canvas');
+      dc.width = W; dc.height = H;
+      dc.getContext('2d').putImageData(origImageData, 0, 0);
+      // Update upload area
+      document.getElementById('upload-area').querySelector('.upload-text').textContent = file.name;
+      document.getElementById('analyze-btn').disabled = false;
+      // Hide old results
+      document.getElementById('results').classList.add('hidden');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function computeGray(imgData) {
+  const d = imgData.data;
+  const g = new Float32Array(W * H);
+  for (let i = 0; i < W * H; i++) {
+    g[i] = 0.299*d[i*4] + 0.587*d[i*4+1] + 0.114*d[i*4+2];
+  }
+  return g;
+}
+
+// ═══════════════════════════════════════════════════════
+// ANALYSIS ENGINE (JS port of Python V8)
+// ═══════════════════════════════════════════════════════
+function runAnalysis() {
+  if (!grayData) return;
+  document.getElementById('spinner').classList.add('show');
+  document.getElementById('analyze-btn').disabled = true;
+  // Defer to let UI update
+  setTimeout(() => {
+    try {
+      const result = analyzeImage();
+      analysisResult = result;
+      renderResults(result);
+      document.getElementById('results').classList.remove('hidden');
+      // Draw marked image
+      drawMarked(result);
+      switchImgTab('marked');
+    } catch(e) {
+      console.error(e);
+      alert('Loi phan tich: ' + e.message);
+    }
+    document.getElementById('spinner').classList.remove('show');
+    document.getElementById('analyze-btn').disabled = false;
+    // Scroll to results
+    setTimeout(() => document.getElementById('results').scrollIntoView({behavior:'smooth'}), 100);
+  }, 50);
+}
+
+function analyzeImage() {
+  const gray = grayData;
+  const total = W * H;
+
+  // --- ROI ---
+  const roi_x1 = Math.floor(W * 0.12), roi_x2 = Math.floor(W * 0.88);
+  const roi_y1 = Math.floor(H * 0.12), roi_y2 = Math.floor(H * 0.88);
+
+  // --- CLAHE approximation (adaptive histogram) ---
+  const enhanced = claheApprox(gray, W, H);
+  const blur = gaussianBlur(enhanced, W, H, 5);
+
+  // --- EDGES (Canny approx) ---
+  const edges = cannyApprox(blur, W, H);
+
+  // --- BASIC METRICS ---
+  let darkCount = 0, vdarkCount = 0, brightCount = 0;
+  let roiSum = 0, roiCount = 0;
+  const darkThr  = percentile(blur, 28);
+  const vdarkThr = percentile(blur, 12);
+  for (let i = 0; i < total; i++) {
+    const v = blur[i];
+    if (v < darkThr) darkCount++;
+    if (v < vdarkThr) vdarkCount++;
+    if (v > 200) brightCount++;
+    const x = i % W, y = Math.floor(i / W);
+    if (x >= roi_x1 && x < roi_x2 && y >= roi_y1 && y < roi_y2) {
+      roiSum += v; roiCount++;
+    }
+  }
+  const dark_ratio   = darkCount / total;
+  const vdark_ratio  = vdarkCount / total;
+  const bright_ratio = brightCount / total;
+  const mean_int     = roiCount > 0 ? roiSum / roiCount : 128;
+
+  // std
+  let edgeCount = 0;
+  for (let i = 0; i < total; i++) if (edges[i] > 0) edgeCount++;
+  const edge_density = edgeCount / total;
+
+  // Texture (Laplacian variance)
+  const lap = laplacian(gray, W, H);
+  const texture = variance(lap);
+
+  // Std density
+  const std_density = stddev(gray);
+
+  // Line count approximation
+  const line_count = estimateLineCount(edges, W, H);
+
+  // Alpha map (alpha = -log(T))
+  let alphaHighCount = 0, alphaAlarmCount = 0, alphaSum = 0;
+  for (let i = 0; i < total; i++) {
+    const v = Math.max(blur[i], 1);
+    const a = -Math.log(v / 255);
+    alphaSum += a;
+    if (a > 2.0) alphaHighCount++;
+    if (a > 3.0) alphaAlarmCount++;
+  }
+  const alpha_mean        = alphaSum / total;
+  const alpha_high_ratio  = alphaHighCount / total;
+  const alpha_alarm_ratio = alphaAlarmCount / total;
+
+  // Dark alarm (WCO/CASRA 2020)
+  const da_thr = percentile(blur, 5);
+  let da_count = 0;
+  for (let i = 0; i < total; i++) {
+    const x = i % W, y = Math.floor(i / W);
+    if (blur[i] < da_thr && x >= roi_x1 && x < roi_x2 && y >= roi_y1 && y < roi_y2)
+      da_count++;
+  }
+  const dark_alarm_ratio = da_count / total;
+  const dark_alarm_count = dark_alarm_ratio > 0.003 ? Math.ceil(dark_alarm_ratio / 0.01) : 0;
+
+  // Cargo entropy
+  const roiVals = [];
+  for (let i = 0; i < total; i++) {
+    const x = i % W, y = Math.floor(i / W);
+    if (x >= roi_x1 && x < roi_x2 && y >= roi_y1 && y < roi_y2)
+      roiVals.push(blur[i]);
+  }
+  const entropy = calcEntropy(roiVals, 10);
+  const homogeneity = Math.max(0, Math.round((1 - Math.min(entropy / 3.5, 1.0)) * 1000) / 1000);
+  let cargo_complexity = homogeneity > 0.7 ? 'DONG NHAT' : homogeneity > 0.4 ? 'TRUNG BINH' : 'HON TAP';
+
+  // Zone histogram
+  const zt = zoneMean(blur, W, H, 0, Math.floor(H/3));
+  const zm = zoneMean(blur, W, H, Math.floor(H/3), Math.floor(2*H/3));
+  const zb = zoneMean(blur, W, H, Math.floor(2*H/3), H);
+  const density_grad    = zb - zt;
+  const zone_uniformity = stddev(new Float32Array([zt, zm, zb]));
+
+  // Symmetry
+  const sym_h = calcSymH(gray, W, H);
+  const sym_v = calcSymV(gray, W, H);
+  const sym_comb = (sym_h + sym_v) / 2;
+
+  // Corner count approx
+  const corner_count = estimateCorners(blur, W, H);
+
+  // MRA
+  const i0 = percentile(new Float32Array(roiVals), 95);
+  let mraSum = 0;
+  for (const v of roiVals) mraSum += v / (i0 + 1e-6);
+  const mra = 1 - (roiVals.length > 0 ? mraSum / roiVals.length : 0);
+
+  // Empty score
+  const cargo_ratio = roiCount / total;
+  const empty_score = Math.max(0, 1 - cargo_ratio * 2 - dark_alarm_ratio * 3);
+
+  // Weight index
+  let att_sum = 0;
+  for (const v of roiVals) att_sum += (255 - v);
+  const weight_index = roiVals.length > 0
+    ? Math.round(att_sum / roiVals.length / 255 * cargo_ratio * 100 * 10) / 10
+    : 0;
+
+  // Overlap
+  const overlap_level = entropy > 4.0 ? 'CAO' : entropy > 3.0 ? 'TRUNG BINH' : 'THAP';
+
+  // Z-range
+  let z_range;
+  if (alpha_alarm_ratio > 0.12 || vdark_ratio > 0.20)
+    z_range = 'HEAVY-Z (Z>=46) - Chi/Dong/Thiec';
+  else if (vdark_ratio > 0.06)
+    z_range = 'MID-Z (Z 16-45) - Thep/Nhom/Gom';
+  else
+    z_range = 'LOW-Z (Z<=15) - Nhua/Vai/Thuc pham';
+
+  // --- CLASSIFICATION ---
+  const scores = {
+    MACHINERY:0, CERAMIC:0, TEXTILE:0, PLASTIC:0,
+    ELECTRONICS:0, LIQUID_CHEMICAL:0, FOOD:0
+  };
+  if (line_count >= 180)  scores.MACHINERY += 35;
+  else if (line_count >= 100) scores.MACHINERY += 25;
+  if (edge_density >= 0.020) scores.MACHINERY += 25;
+  if (texture >= 180)     scores.MACHINERY += 20;
+  if (vdark_ratio >= 0.06) { scores.MACHINERY += 10; scores.ELECTRONICS += 10; }
+  if (dark_ratio >= 0.18) scores.CERAMIC += 25;
+  if (edge_density < 0.018 && texture < 220) scores.CERAMIC += 25;
+  if (edge_density < 0.015) scores.TEXTILE += 25;
+  if (texture < 120)      scores.TEXTILE += 25;
+  if (vdark_ratio < 0.04) scores.TEXTILE += 15;
+  if (dark_ratio >= 0.08 && dark_ratio <= 0.20) scores.PLASTIC += 20;
+  if (texture >= 100 && texture <= 260) scores.PLASTIC += 20;
+  if (texture >= 300)     scores.ELECTRONICS += 30;
+  if (edge_density >= 0.028) scores.ELECTRONICS += 25;
+  if (edge_density < 0.014 && std_density < 45) scores.LIQUID_CHEMICAL += 25;
+  if (dark_ratio >= 0.12 && texture < 140) scores.LIQUID_CHEMICAL += 20;
+  // V8 rules
+  if (zone_uniformity < 8)  { scores.LIQUID_CHEMICAL += 20; scores.TEXTILE += 10; }
+  if (density_grad > 15)    { scores.MACHINERY += 15; scores.CERAMIC += 10; }
+  if (sym_comb > 0.75)      { scores.MACHINERY += 20; scores.ELECTRONICS += 10; }
+  if (sym_comb < 0.55)      { scores.CERAMIC += 10; scores.PLASTIC += 10; }
+  if (alpha_high_ratio > 0.08) scores.MACHINERY += 20;
+  if (homogeneity > 0.75)   { scores.LIQUID_CHEMICAL += 15; scores.TEXTILE += 10; }
+  if (corner_count > 200)   { scores.MACHINERY += 20; scores.ELECTRONICS += 15; }
+  if (corner_count < 30)    { scores.TEXTILE += 15; scores.LIQUID_CHEMICAL += 10; }
+  if (texture < 80 && edge_density < 0.010) scores.FOOD += 20;
+
+  let image_class = Object.keys(scores).reduce((a,b) => scores[a]>scores[b]?a:b);
+  const image_score = scores[image_class];
+  if (image_score < 35) image_class = 'UNKNOWN';
+
+  // Calibrated confidence
+  let conf = Math.min(88, Math.max(45, image_score));
+  if (['TEXTILE','PLASTIC','FOOD'].includes(image_class)) conf = Math.min(conf, 60);
+  if (vdark_ratio > 0.15) conf = Math.min(conf, 55);
+  if (entropy > 2.5) conf = Math.floor(conf * 0.85);
+  if (image_class === 'MACHINERY' && homogeneity > 0.6) conf = Math.min(88, conf + 10);
+  conf = Math.max(35, Math.min(88, conf));
+
+  // --- MANIFEST ---
+  const manifestText = document.getElementById('manifest').value;
+  const { mClass, mScores } = classifyManifest(manifestText);
+
+  // --- RISK ---
+  const { risk_score, reasons, warnings, conclusion, stage } = calcRisk(
+    mClass, image_class,
+    { vdark_ratio, dark_alarm_count, dark_alarm_ratio, alpha_alarm_ratio:alpha_alarm_ratio,
+      alpha_high_ratio, homogeneity, entropy, overlap_level, weight_index, line_count,
+      edge_density, texture },
+    conf
+  );
+
+  // --- SUSPICIOUS BOXES ---
+  const boxes = findSuspiciousBoxes(blur, edges, W, H, roi_x1, roi_x2, roi_y1, roi_y2, total);
+
+  return {
+    image_class, image_score, conf, z_range, mClass,
+    risk_score, reasons, warnings, conclusion, stage,
+    boxes,
+    metrics_basic: {
+      'Dark Ratio': dark_ratio.toFixed(3),
+      'Very Dark': vdark_ratio.toFixed(3),
+      'Bright Ratio': bright_ratio.toFixed(3),
+      'Edge Density': edge_density.toFixed(3),
+      'Texture': Math.round(texture),
+      'Line Count': line_count,
+      'Std Density': std_density.toFixed(1),
+      'Mean Intensity': mean_int.toFixed(1),
+      'Cargo Fill': cargo_ratio.toFixed(3),
+      'Weight Index': weight_index,
+    },
+    metrics_physics: {
+      'Alpha Mean': alpha_mean.toFixed(4),
+      'Alpha High Ratio': (alpha_high_ratio*100).toFixed(1)+'%',
+      'Alpha Alarm Ratio': (alpha_alarm_ratio*100).toFixed(1)+'%',
+      'Dark Alarm Count': dark_alarm_count,
+      'Dark Alarm Ratio': (dark_alarm_ratio*100).toFixed(1)+'%',
+      'MRA (Beer-Lambert)': mra.toFixed(4),
+      'Z-Range': z_range,
+    },
+    metrics_struct: {
+      'Homogeneity': homogeneity,
+      'Cargo Entropy': entropy.toFixed(3),
+      'Cargo Complexity': cargo_complexity,
+      'Zone Uniformity': zone_uniformity.toFixed(1),
+      'Density Gradient': density_grad.toFixed(1),
+      'Symmetry H': sym_h.toFixed(3),
+      'Symmetry V': sym_v.toFixed(3),
+      'Symmetry Comb': sym_comb.toFixed(3),
+      'Corner Count': corner_count,
+      'Overlap Level': overlap_level,
+      'Empty Score': empty_score.toFixed(3),
+    },
+    grayData: enhanced,
+    blurData: blur,
+  };
+}
+
+// ═══════════════════════════════════════════════════════
+// MATH HELPERS
+// ═══════════════════════════════════════════════════════
+function percentile(arr, p) {
+  const sorted = Float32Array.from(arr).sort();
+  return sorted[Math.floor(sorted.length * p / 100)];
+}
+function variance(arr) {
+  let sum = 0, sum2 = 0, n = arr.length;
+  for (let i = 0; i < n; i++) { sum += arr[i]; sum2 += arr[i]*arr[i]; }
+  return sum2/n - (sum/n)**2;
+}
+function stddev(arr) { return Math.sqrt(variance(arr)); }
+
+function gaussianBlur(src, w, h, ksize) {
+  // Simple box blur approximation
+  const out = new Float32Array(w * h);
+  const r = Math.floor(ksize / 2);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      let sum = 0, cnt = 0;
+      for (let dy = -r; dy <= r; dy++) {
+        for (let dx = -r; dx <= r; dx++) {
+          const nx = x+dx, ny = y+dy;
+          if (nx >= 0 && nx < w && ny >= 0 && ny < h) {
+            sum += src[ny*w+nx]; cnt++;
+          }
+        }
+      }
+      out[y*w+x] = sum / cnt;
+    }
+  }
+  return out;
+}
+
+function claheApprox(gray, w, h) {
+  // Simple CLAHE approximation: local histogram equalization
+  const out = new Float32Array(w * h);
+  const tile = 64;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const tx1 = Math.max(0, x - tile), tx2 = Math.min(w, x + tile);
+      const ty1 = Math.max(0, y - tile), ty2 = Math.min(h, y + tile);
+      let lo = 255, hi = 0;
+      for (let ty = ty1; ty < ty2; ty += 4) {
+        for (let tx = tx1; tx < tx2; tx += 4) {
+          const v = gray[ty*w+tx];
+          if (v < lo) lo = v;
+          if (v > hi) hi = v;
+        }
+      }
+      const range = hi - lo;
+      out[y*w+x] = range > 2 ? Math.min(255, (gray[y*w+x] - lo) / range * 255) : gray[y*w+x];
+    }
+  }
+  return out;
+}
+
+function laplacian(src, w, h) {
+  const out = new Float32Array(w * h);
+  for (let y = 1; y < h-1; y++) {
+    for (let x = 1; x < w-1; x++) {
+      const v = -src[(y-1)*w+x] - src[(y+1)*w+x] - src[y*w+x-1] - src[y*w+x+1] + 4*src[y*w+x];
+      out[y*w+x] = v;
+    }
+  }
+  return out;
+}
+
+function cannyApprox(blur, w, h) {
+  const edges = new Uint8Array(w * h);
+  const lo = 35, hi = 120;
+  for (let y = 1; y < h-1; y++) {
+    for (let x = 1; x < w-1; x++) {
+      const gx = blur[y*w+x+1] - blur[y*w+x-1];
+      const gy = blur[(y+1)*w+x] - blur[(y-1)*w+x];
+      const mag = Math.sqrt(gx*gx + gy*gy);
+      edges[y*w+x] = mag > hi ? 255 : mag > lo ? 128 : 0;
+    }
+  }
+  return edges;
+}
+
+function estimateLineCount(edges, w, h) {
+  // Hough-like: count horizontal/vertical runs
+  let runs = 0;
+  const minLen = 45;
+  for (let y = 0; y < h; y++) {
+    let run = 0;
+    for (let x = 0; x < w; x++) {
+      if (edges[y*w+x] > 0) { run++; if (run === minLen) runs++; }
+      else run = 0;
+    }
+  }
+  return Math.min(runs * 3, 400); // scale up to approximate HoughP output
+}
+
+function calcEntropy(vals, bins) {
+  if (vals.length === 0) return 0;
+  const hist = new Array(bins).fill(0);
+  for (const v of vals) {
+    const b = Math.min(bins-1, Math.floor(v / 256 * bins));
+    hist[b]++;
+  }
+  const n = vals.length;
+  let ent = 0;
+  for (const c of hist) {
+    if (c > 0) { const p = c/n; ent -= p * Math.log2(p); }
+  }
+  return ent;
+}
+
+function zoneMean(buf, w, h, y1, y2) {
+  let sum = 0, cnt = 0;
+  for (let y = y1; y < y2; y++)
+    for (let x = 0; x < w; x++) { sum += buf[y*w+x]; cnt++; }
+  return cnt > 0 ? sum/cnt : 128;
+}
+
+function calcSymH(gray, w, h) {
+  let diff = 0; const mx = Math.floor(w/2);
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < mx; x++)
+      diff += Math.abs(gray[y*w+x] - gray[y*w+(w-1-x)]);
+  return 1 - diff / (mx * h * 255);
+}
+
+function calcSymV(gray, w, h) {
+  let diff = 0; const my = Math.floor(h/2);
+  for (let y = 0; y < my; y++)
+    for (let x = 0; x < w; x++)
+      diff += Math.abs(gray[y*w+x] - gray[(h-1-y)*w+x]);
+  return 1 - diff / (my * w * 255);
+}
+
+function estimateCorners(blur, w, h) {
+  // Shi-Tomasi approximation: count local minima/maxima
+  let corners = 0;
+  const step = 10;
+  for (let y = step; y < h-step; y += step) {
+    for (let x = step; x < w-step; x += step) {
+      const v = blur[y*w+x];
+      const diff = Math.abs(v - blur[(y-step)*w+x]) +
+                   Math.abs(v - blur[(y+step)*w+x]) +
+                   Math.abs(v - blur[y*w+x-step]) +
+                   Math.abs(v - blur[y*w+x+step]);
+      if (diff > 80) corners++;
+    }
+  }
+  return corners;
+}
+
+function findSuspiciousBoxes(blur, edges, w, h, rx1, rx2, ry1, ry2, total) {
+  const mu = zoneMean(blur, w, h, ry1, ry2);
+  const vals = [];
+  for (let y = ry1; y < ry2; y++)
+    for (let x = rx1; x < rx2; x++)
+      vals.push(blur[y*w+x]);
+  const sg = stddev(new Float32Array(vals));
+  if (sg < 1) return [];
+  const boxes = [];
+  const tile = 60;
+  const stride = 40;
+  for (let y = ry1; y < ry2 - tile; y += stride) {
+    for (let x = rx1; x < rx2 - tile; x += stride) {
+      let sum = 0, edgeSum = 0;
+      for (let dy = 0; dy < tile; dy++)
+        for (let dx = 0; dx < tile; dx++) {
+          const v = blur[(y+dy)*w+(x+dx)];
+          sum += Math.abs((v - mu) / sg);
+          if (edges[(y+dy)*w+(x+dx)] > 0) edgeSum++;
+        }
+      const zScore = sum / (tile * tile);
+      const edgeDens = edgeSum / (tile * tile);
+      if (zScore > 2.2 && edgeDens > 0.01)
+        boxes.push({ x, y, w: tile, h: tile, score: zScore * edgeDens, edgeDens });
+    }
+  }
+  boxes.sort((a, b) => b.score - a.score);
+  return boxes.slice(0, 6);
+}
+
+// ═══════════════════════════════════════════════════════
+// MANIFEST CLASSIFY
+// ═══════════════════════════════════════════════════════
+function classifyManifest(text) {
+  const t = text.toUpperCase();
+  const groups = {
+    MACHINERY: ['EXCAVATOR','MACHINE','MACHINERY','FORKLIFT','TRUCK','ENGINE','MOTOR','CRANE','LOADER','BULLDOZER','PUMP','COMPRESSOR','GENERATOR','TURBINE','GEARBOX','HYDRAULIC','8429','8427','8431','8701','8704','8413'],
+    CERAMIC:   ['CERAMIC','FLOWERPOT','POT','TILE','PORCELAIN','STONE','GRANITE','MARBLE','BRICK','CLAY','TERRACOTTA','6913','6907','6908','6910','6911'],
+    TEXTILE:   ['TEXTILE','GARMENT','CLOTH','FABRIC','SHIRT','PANTS','COTTON','POLYESTER','APPAREL','YARN','THREAD','KNIT','WOVEN','FIBER','BLANKET','CURTAIN','CARPET','RUG'],
+    PLASTIC:   ['PLASTIC','POLY','PVC','PE','PP','RESIN','POLYSTYRENE','NYLON','ACRYLIC','ABS','HDPE','LDPE','PET','FOAM','3901','3902','3903','3904','3905'],
+    ELECTRONICS:['ELECTRONIC','COMPUTER','LAPTOP','PHONE','CIRCUIT','BOARD','BATTERY','CAPACITOR','TRANSISTOR','SEMICONDUCTOR','PCB','LED','8507','8517','8541'],
+    LIQUID_CHEMICAL:['LIQUID','CHEMICAL','OIL','PAINT','INK','ADHESIVE','DRUM','BARREL','IBC','TANK','SOLVENT','ACID','ALKALI','LUBRICANT','FUEL','FERTILIZER'],
+    FOOD:      ['FOOD','RICE','WHEAT','FLOUR','SUGAR','COFFEE','TEA','FRUIT','VEGETABLE','MEAT','FISH','SEAFOOD','FROZEN','CANNED','BEVERAGE','JUICE','MILK'],
+  };
+  const mScores = {};
+  for (const [g, kws] of Object.entries(groups))
+    mScores[g] = kws.filter(kw => t.includes(kw)).length;
+  const best = Object.keys(mScores).reduce((a,b) => mScores[a]>mScores[b]?a:b);
+  const mClass = mScores[best] === 0 ? 'UNKNOWN' : best;
+  return { mClass, mScores };
+}
+
+// ═══════════════════════════════════════════════════════
+// RISK ENGINE
+// ═══════════════════════════════════════════════════════
+function calcRisk(mClass, imgClass, m, conf) {
+  let score = 20;
+  const reasons = [], warnings = [];
+
+  if (mClass === 'UNKNOWN') { score += 15; reasons.push('Manifest chua du thong tin de phan loai chac chan.'); }
+  if (imgClass === 'UNKNOWN') { score += 15; reasons.push('Anh X-ray chua du dac trung de phan loai chac chan.'); }
+  if (mClass !== 'UNKNOWN' && imgClass !== 'UNKNOWN') {
+    if (mClass === imgClass) { score -= 10; reasons.push('Dac trung anh tuong doi phu hop voi Manifest.'); }
+    else { score += 35; reasons.push(`Manifest khai '${mClass}' nhung anh nhan dang '${imgClass}'.`); }
+  }
+  if (m.vdark_ratio > 0.08) { score += 10; reasons.push('Co vung rat dam/mat do cao can doi chieu.'); }
+  if (m.line_count > 250) { score += 8; reasons.push('Anh co nhieu cau truc duong bien.'); }
+  if (conf < 55) { score += 5; reasons.push('Do tin cay AI con thap.'); }
+  if (m.dark_alarm_count >= 1) {
+    score += 20;
+    reasons.push(`Phat hien vung 'dark alarm' - tia X khong xuyen qua duoc (WCO/CASRA 2020). Can nhac soi tu goc khac.`);
+  }
+  if (m.alpha_alarm_ratio > 0.03) {
+    score += 15;
+    reasons.push(`Alpha-transparency rat cao (${(m.alpha_alarm_ratio*100).toFixed(1)}%) - vat lieu qua dac (MIT/Lalor 2024).`);
+  }
+  if (m.homogeneity < 0.40) {
+    score += 15;
+    reasons.push(`Hang hon tap (homogeneity=${m.homogeneity}) - doi chieu ky manifest.`);
+  }
+  if (m.overlap_level === 'CAO') { score += 10; reasons.push('Nhieu lop vat the chong len nhau.'); }
+  if (m.weight_index > 60) { score += 12; reasons.push(`Chi so trong luong anh rat cao (${m.weight_index}) - ACXIS 2016.`); }
+  if (['TEXTILE','PLASTIC','FOOD'].includes(mClass) && m.alpha_high_ratio > 0.05) {
+    score += 20;
+    reasons.push('CANH BAO: Khai bao hang nhe nhung co vung hap thu tia X bat thuong - kich ban an hang Z cao trong hang Z thap (MIT 2024).');
+  }
+
+  // Warnings
+  if (['TEXTILE','PLASTIC','FOOD'].includes(imgClass))
+    warnings.push('Vat lieu Z thap: tia X KHONG phan biet chinh xac giua cac hang huu co (non-unique solution - MIT/Lalor 2024).');
+  if (m.vdark_ratio > 0.15)
+    warnings.push('Hang day dac: beam hardening lam giam tuong phan dual-energy (Kolkoori/BAM 2014).');
+  if (mClass !== 'UNKNOWN' && imgClass !== 'UNKNOWN' && mClass !== imgClass)
+    warnings.push('Khong khop co the do gioi han vat ly: vat lieu Z cao mong va Z thap day cho anh X-ray giong nhau (MIT 2024).');
+
+  score = Math.max(0, Math.min(100, score));
+
+  let conclusion, stage;
+  if (score >= 75) {
+    conclusion = 'Khuyen nghi kiem tra thuc te. Neu co vung dark alarm, can nhac soi tu goc khac truoc khi mo container (WCO/CASRA 2020).';
+    stage = 'Giai doan 2-3: Mo container, kiem tra tung kien hang. Dark alarm → can nhac CT scanner. Ghi nhan ACXIS database.';
+  } else if (score >= 45) {
+    conclusion = 'Khuyen nghi ra soat Manifest va doi chieu ky voi anh. Chu y vung chong chat.';
+    stage = 'Giai doan 1.5: Soi lai tu goc khac neu co the. Doi chieu manifest voi tung vung anh.';
+  } else {
+    conclusion = 'Hang tuong doi dong nhat, phu hop manifest. Co the xem xet thong quan neu ho so day du.';
+    stage = 'Giai doan 1 - Thong quan co dieu kien: Xac nhan ho so day du. Luu anh vao database ACXIS.';
+  }
+  return { risk_score: score, reasons, warnings, conclusion, stage };
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER RESULTS
+// ═══════════════════════════════════════════════════════
+function renderResults(r) {
+  // Class
+  document.getElementById('r-class').textContent = r.image_class;
+  document.getElementById('r-zrange').textContent = r.z_range;
+  document.getElementById('r-conf').textContent = r.conf + '%';
+
+  // Risk
+  document.getElementById('r-risk-score').textContent = r.risk_score + '/100';
+  const bar = document.getElementById('r-risk-bar');
+  bar.style.width = r.risk_score + '%';
+  let riskColor, badgeClass, badgeText;
+  if (r.risk_score >= 75) {
+    riskColor = 'var(--red)'; badgeClass = 'badge-red'; badgeText = 'RUI RO CAO';
+  } else if (r.risk_score >= 45) {
+    riskColor = 'var(--orange)'; badgeClass = 'badge-orange'; badgeText = 'TRUNG BINH';
+  } else {
+    riskColor = 'var(--green)'; badgeClass = 'badge-green'; badgeText = 'THAP';
+  }
+  bar.style.background = riskColor;
+  document.getElementById('r-risk-badge').innerHTML = `<span class="badge ${badgeClass}">${badgeText}</span>`;
+
+  // Manifest
+  document.getElementById('r-manifest').textContent = r.mClass;
+  document.getElementById('r-imgclass').textContent = r.image_class;
+  const matchBox = document.getElementById('r-match-box');
+  if (r.mClass === 'UNKNOWN' || r.image_class === 'UNKNOWN') {
+    matchBox.className = 'match-box match-unknown';
+    matchBox.textContent = 'Chua du du lieu de so khop';
+  } else if (r.mClass === r.image_class) {
+    matchBox.className = 'match-box match-ok';
+    matchBox.textContent = 'Anh tuong doi phu hop voi Manifest';
+  } else {
+    matchBox.className = 'match-box match-bad';
+    matchBox.textContent = `KHONG PHU HOP: ${r.mClass} ≠ ${r.image_class}`;
+  }
+
+  // Reasons
+  const reasonsEl = document.getElementById('r-reasons');
+  reasonsEl.innerHTML = r.reasons.map(re =>
+    `<div class="reason-item">${re}</div>`
+  ).join('');
+
+  // Metrics
+  renderMetricList('metrics-basic', r.metrics_basic);
+  renderMetricList('metrics-physics', r.metrics_physics);
+  renderMetricList('metrics-struct', r.metrics_struct);
+
+  // Warnings
+  const warnEl = document.getElementById('r-warnings');
+  if (r.warnings.length === 0) {
+    warnEl.innerHTML = '<div style="color:var(--green);font-size:13px;">Khong co canh bao gioi han vat ly dac biet.</div>';
+  } else {
+    warnEl.innerHTML = r.warnings.map(w => `<div class="warning-item">${w}</div>`).join('');
+  }
+
+  // Conclusion
+  const concEl = document.getElementById('r-conclusion');
+  concEl.className = 'conclusion-box ' + (r.risk_score >= 75 ? 'conclusion-high' : r.risk_score >= 45 ? 'conclusion-mid' : 'conclusion-low');
+  concEl.textContent = r.conclusion;
+  document.getElementById('r-stage').textContent = r.stage;
+}
+
+function renderMetricList(id, data) {
+  const el = document.getElementById(id);
+  el.innerHTML = Object.entries(data).map(([k,v]) =>
+    `<div class="metric-row"><span class="metric-row-label">${k}</span><span class="metric-row-val">${v}</span></div>`
+  ).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+// IMAGE DISPLAY
+// ═══════════════════════════════════════════════════════
+function switchImgTab(tab) {
+  currentImgTab = tab;
+  document.querySelectorAll('#img-tabs .tab').forEach((t,i) => {
+    const tabs = ['orig','marked','heat','log','lut'];
+    t.classList.toggle('active', tabs[i] === tab);
+  });
+  document.getElementById('lut-controls').classList.toggle('hidden', tab !== 'lut');
+  drawCurrentTab();
+}
+
+function drawCurrentTab() {
+  const dc = document.getElementById('display-canvas');
+  dc.width = W; dc.height = H;
+  const ctx = dc.getContext('2d');
+  switch (currentImgTab) {
+    case 'orig':   ctx.putImageData(origImageData, 0, 0); break;
+    case 'marked': drawMarked(analysisResult); break;
+    case 'heat':   drawHeatmap(ctx); break;
+    case 'log':    drawLog(ctx); break;
+    case 'lut':    applyLUT(currentLUT); break;
+  }
+}
+
+function drawMarked(result) {
+  if (!result) return;
+  const dc = document.getElementById('display-canvas');
+  dc.width = W; dc.height = H;
+  const ctx = dc.getContext('2d');
+  ctx.putImageData(origImageData, 0, 0);
+  ctx.lineWidth = 2;
+  result.boxes.forEach((b, i) => {
+    ctx.strokeStyle = b.edgeDens > 0.15 ? '#ff3d3d' : '#ff9800';
+    ctx.strokeRect(b.x, b.y, b.w, b.h);
+    ctx.fillStyle = b.edgeDens > 0.15 ? 'rgba(255,61,61,0.8)' : 'rgba(255,152,0,0.8)';
+    ctx.font = `bold ${Math.max(10, Math.floor(W/50))}px sans-serif`;
+    ctx.fillText(`#${i+1}`, b.x+3, b.y+12);
+  });
+}
+
+function drawHeatmap(ctx) {
+  if (!analysisResult) return;
+  const blur = analysisResult.blurData;
+  const id = ctx.createImageData(W, H);
+  for (let i = 0; i < W*H; i++) {
+    const v = 255 - blur[i];
+    const t = v / 255;
+    id.data[i*4]   = Math.floor(Math.min(255, t * 4 * 255));
+    id.data[i*4+1] = Math.floor(Math.min(255, Math.abs(t*4 - 2) * 255 * 0.5));
+    id.data[i*4+2] = Math.floor(Math.min(255, (1-t) * 4 * 255));
+    id.data[i*4+3] = 255;
+  }
+  ctx.putImageData(id, 0, 0);
+}
+
+function drawLog(ctx) {
+  if (!analysisResult) return;
+  const gray = analysisResult.grayData;
+  const id = ctx.createImageData(W, H);
+  let maxV = 0;
+  const log = new Float32Array(W*H);
+  for (let i = 0; i < W*H; i++) { log[i] = Math.log1p(gray[i]); if(log[i]>maxV) maxV=log[i]; }
+  for (let i = 0; i < W*H; i++) {
+    const v = Math.floor(log[i] / (maxV||1) * 255);
+    id.data[i*4] = id.data[i*4+1] = id.data[i*4+2] = v;
+    id.data[i*4+3] = 255;
+  }
+  ctx.putImageData(id, 0, 0);
+}
+
+function applyLUT(mode) {
+  currentLUT = mode;
+  document.querySelectorAll('.lut-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent.toLowerCase().includes(
+      mode === 'gray' ? 'grey' : mode === 'log' ? 'log' : mode === 'sqrt' ? 'sqrt' :
+      mode === 'pseudo' ? 'pseudo' : mode === 'hist' ? 'hist' : mode === 'invert' ? 'inv' :
+      mode === 'edge' ? 'edge' : mode === 'organic' ? 'org' : 'quick'
+    ));
+  });
+  if (!analysisResult) return;
+  const dc = document.getElementById('display-canvas');
+  dc.width = W; dc.height = H;
+  const ctx = dc.getContext('2d');
+  const gray = analysisResult.grayData;
+  const id = ctx.createImageData(W, H);
+  for (let i = 0; i < W*H; i++) {
+    let r, g, b, v = gray[i];
+    switch (mode) {
+      case 'gray':    r=g=b=v; break;
+      case 'log':     { const l=Math.log1p(v)/Math.log1p(255)*255; r=g=b=l; } break;
+      case 'sqrt':    r=g=b=Math.sqrt(v/255)*255; break;
+      case 'invert':  r=g=b=255-v; break;
+      case 'organic': r=g=b=v>180?255:0; break;
+      case 'wiener':  r=g=b=Math.min(255,(v/128)*255); break;
+      case 'pseudo':
+        { const t=v/255;
+          r=Math.min(255,Math.max(0,Math.floor(4*t*255)));
+          g=Math.min(255,Math.max(0,Math.floor((1-Math.abs(4*t-2))*255)));
+          b=Math.min(255,Math.max(0,Math.floor((1-4*t)*255+255)));
+        } break;
+      case 'hist':
+        if(v>200){r=100;g=149;b=237;}
+        else if(v<55){r=220;g=50;b=47;}
+        else{r=g=b=v;}
+        break;
+      case 'edge':
+        { const lap = analysisResult ? 0 : 0;
+          r=g=b=Math.min(255,v); }
+        break;
+      default: r=g=b=v;
+    }
+    id.data[i*4]=r; id.data[i*4+1]=g; id.data[i*4+2]=b; id.data[i*4+3]=255;
+  }
+  ctx.putImageData(id, 0, 0);
+}
+
+// METRIC TABS
+function switchMetricTab(tab) {
+  ['basic','physics','struct'].forEach(t => {
+    document.getElementById('metrics-'+t).classList.toggle('hidden', t !== tab);
+  });
+  document.querySelectorAll('.card .tabs .tab').forEach((el, i) => {
+    el.classList.toggle('active', ['basic','physics','struct'][i] === tab);
+  });
+}
+</script>
+</body>
+</html>
