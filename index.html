@@ -1,4 +1,4 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
@@ -38,7 +38,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 
 .wrap{padding:14px;max-width:560px;margin:0 auto;}
 
-/* STEPS */
 .steps{display:flex;margin-bottom:16px;border-radius:8px;overflow:hidden;background:var(--bg3);}
 .step{
   flex:1;text-align:center;padding:9px 4px;font-size:10px;font-weight:700;
@@ -47,7 +46,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 .step.active{background:var(--accent2);color:#fff;}
 .step.done{color:var(--green);}
 
-/* CARD */
 .card{
   background:var(--card);border:1px solid var(--border);
   border-radius:var(--r);padding:16px;margin-bottom:12px;
@@ -63,7 +61,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
   display:flex;align-items:center;justify-content:center;flex-shrink:0;
 }
 
-/* SETUP CARD */
 .setup-row{display:flex;gap:8px;align-items:center;}
 .setup-inp{
   flex:1;background:var(--bg3);border:1px solid var(--border2);
@@ -87,7 +84,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
   border-radius:8px;font-size:12px;color:var(--green);
 }
 
-/* TEXTAREA */
 textarea{
   width:100%;background:var(--bg3);border:1px solid var(--border);
   border-radius:8px;color:var(--text);font-family:var(--font);
@@ -96,7 +92,6 @@ textarea{
 }
 textarea:focus{border-color:var(--accent);}
 
-/* QUICK BTNS */
 .qrow{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
 .qbtn{
   padding:5px 11px;border-radius:20px;font-size:11px;font-weight:700;
@@ -105,7 +100,6 @@ textarea:focus{border-color:var(--accent);}
 }
 .qbtn:active{background:var(--accent2);color:#fff;border-color:var(--accent2);}
 
-/* UPLOAD */
 .upload-zone{
   border:2px dashed var(--border2);border-radius:var(--r);
   padding:26px 16px;text-align:center;position:relative;
@@ -121,13 +115,11 @@ textarea:focus{border-color:var(--accent);}
   background:rgba(0,198,224,0.06);font-size:11px;color:var(--text2);line-height:1.6;
 }
 
-/* IMAGE */
 .img-preview{display:none;margin-top:10px;}
 .img-wrap{border-radius:10px;overflow:hidden;background:#000;}
 .img-wrap img{width:100%;display:block;transition:filter .2s;}
 .fname{font-size:11px;color:var(--green);text-align:center;margin-top:6px;}
 
-/* LUT BAR */
 .lut-bar{display:flex;gap:4px;overflow-x:auto;margin-top:8px;padding-bottom:2px;}
 .lut-bar::-webkit-scrollbar{display:none;}
 .lbtn{
@@ -138,7 +130,6 @@ textarea:focus{border-color:var(--accent);}
 }
 .lbtn.on{background:var(--accent2);color:#fff;border-color:var(--accent2);}
 
-/* ANALYZE BTN */
 .btn-go{
   width:100%;padding:16px;border-radius:var(--r);border:none;
   background:linear-gradient(90deg,#005f80,#00c6e0);
@@ -149,7 +140,6 @@ textarea:focus{border-color:var(--accent);}
 .btn-go:disabled{opacity:.4;cursor:not-allowed;}
 .btn-go:not(:disabled):active{transform:scale(.97);}
 
-/* LOADING */
 .loading{display:none;text-align:center;padding:28px 0;}
 .loading.on{display:block;}
 .spin{
@@ -161,10 +151,8 @@ textarea:focus{border-color:var(--accent);}
 .load-txt{font-size:14px;color:var(--text2);}
 .load-step{font-size:11px;color:var(--text3);margin-top:4px;}
 
-/* RESULTS */
 #results{display:none;}
 
-/* VERDICT */
 .verdict{border-radius:var(--r);padding:16px;margin-bottom:12px;border:1px solid;}
 .v-hold{background:rgba(255,59,78,.07);border-color:rgba(255,59,78,.3);}
 .v-clear{background:rgba(0,224,150,.07);border-color:rgba(0,224,150,.3);}
@@ -175,7 +163,6 @@ textarea:focus{border-color:var(--accent);}
 .v-caution .v-title{color:var(--orange);}
 .v-sub{font-size:13px;line-height:1.6;color:var(--text);}
 
-/* AI BLOCK */
 .ai-block{
   background:var(--card);border:1px solid var(--border);
   border-radius:var(--r);margin-bottom:12px;overflow:hidden;
@@ -192,7 +179,6 @@ textarea:focus{border-color:var(--accent);}
 }
 .ai-body{padding:14px;}
 
-/* OBJECT ITEMS */
 .obj-item{
   padding:10px 0;border-bottom:1px solid rgba(26,53,80,.5);
   display:flex;gap:10px;
@@ -214,7 +200,6 @@ textarea:focus{border-color:var(--accent);}
 .tag-bad{background:rgba(255,59,78,.12);color:var(--red);}
 .tag-info{background:rgba(0,198,224,.12);color:var(--accent);}
 
-/* COMPARE TABLE */
 .cmp-table{width:100%;}
 .cmp-row{
   display:flex;justify-content:space-between;
@@ -228,7 +213,6 @@ textarea:focus{border-color:var(--accent);}
 .mismatch{color:var(--red);}
 .neutral{color:var(--text);}
 
-/* CHECKLIST */
 .chk-item{
   display:flex;gap:10px;padding:10px 12px;margin-bottom:6px;
   background:var(--bg3);border-radius:8px;border-left:3px solid;
@@ -239,14 +223,12 @@ textarea:focus{border-color:var(--accent);}
 .chk-low{border-left-color:var(--accent);}
 .chk-icon{flex-shrink:0;font-size:14px;margin-top:1px;}
 
-/* FULL TEXT */
 .full-text{
   font-size:13px;line-height:1.8;color:var(--text);
   background:var(--bg3);border-radius:8px;padding:14px;
   border-left:3px solid var(--accent2);
 }
 
-/* ANNOTATE */
 .ann-block{
   background:var(--card);border:1px solid var(--border);
   border-radius:var(--r);margin-bottom:12px;overflow:hidden;
@@ -280,7 +262,6 @@ textarea:focus{border-color:var(--accent);}
 .dr-clear{background:rgba(0,224,150,.1);color:var(--green);}
 .dr-hold{background:rgba(255,59,78,.1);color:var(--red);}
 
-/* ERROR */
 .err-box{
   background:rgba(255,59,78,.07);border:1px solid rgba(255,59,78,.3);
   border-radius:8px;padding:14px;font-size:13px;line-height:1.7;color:var(--text);
@@ -394,13 +375,11 @@ textarea:focus{border-color:var(--accent);}
   <!-- RESULTS -->
   <div id="results">
 
-    <!-- VERDICT -->
     <div id="vbox" class="verdict v-caution">
       <div class="v-title" id="vtitle">DANG DANH GIA</div>
       <div class="v-sub" id="vsub"></div>
     </div>
 
-    <!-- VAT THE -->
     <div class="ai-block">
       <div class="ai-hd">
         <span>🔍</span>
@@ -412,7 +391,6 @@ textarea:focus{border-color:var(--accent);}
       </div>
     </div>
 
-    <!-- DOI CHIEU MANIFEST -->
     <div class="ai-block">
       <div class="ai-hd">
         <span>📋</span>
@@ -423,7 +401,6 @@ textarea:focus{border-color:var(--accent);}
       </div>
     </div>
 
-    <!-- CAU HOI DOI CHIEU -->
     <div class="ai-block">
       <div class="ai-hd">
         <span>❓</span>
@@ -435,7 +412,6 @@ textarea:focus{border-color:var(--accent);}
       </div>
     </div>
 
-    <!-- PHAN TICH TOAN VAN -->
     <div class="ai-block">
       <div class="ai-hd">
         <span>📄</span>
@@ -446,7 +422,6 @@ textarea:focus{border-color:var(--accent);}
       </div>
     </div>
 
-    <!-- ANNOTATE -->
     <div class="ann-block">
       <div class="ann-hd">📝 Ghi chu va Quyet dinh can bo</div>
       <div class="ann-body">
@@ -460,14 +435,12 @@ textarea:focus{border-color:var(--accent);}
       </div>
     </div>
 
-  </div><!-- /results -->
+  </div>
 </div>
 
 <script>
-// ── STATE ──────────────────────────────────────────
 let b64 = null, mime = 'image/jpeg';
 
-// ── API KEY ────────────────────────────────────────
 function saveKey() {
   const k = document.getElementById('api-inp').value.trim();
   if (!k.startsWith('AIza')) {
@@ -497,7 +470,6 @@ window.addEventListener('DOMContentLoaded', () => {
   checkReady();
 });
 
-// ── MANIFEST QUICK FILL ────────────────────────────
 const tpls = {
   machinery:   '01 UNIT EXCAVATOR PC200-8M0\nHS CODE: 8429.52.00\nWEIGHT: 18,500 KGS\nORIGIN: JAPAN\nBrand: Komatsu, Year: 2022',
   textile:     '500 CARTONS GARMENT (SHIRTS & PANTS)\nHS CODE: 6205.20.00 / 6203.42.00\nWEIGHT: 8,500 KGS · 15,000 PCS\nMADE IN VIETNAM · DESTINATION: EU',
@@ -509,7 +481,6 @@ const tpls = {
 };
 function qfill(t) { document.getElementById('manifest').value = tpls[t] || ''; }
 
-// ── FILE HANDLING ──────────────────────────────────
 function handleFile(inp) {
   const f = inp.files[0];
   if (!f) return;
@@ -528,7 +499,6 @@ function handleFile(inp) {
   r.readAsDataURL(f);
 }
 
-// ── LUT FILTERS ────────────────────────────────────
 function lut(btn, mode) {
   document.querySelectorAll('.lbtn').forEach(b => b.classList.remove('on'));
   btn.classList.add('on');
@@ -544,12 +514,10 @@ function lut(btn, mode) {
   img.style.filter = f[mode] || 'none';
 }
 
-// ── CHECK READY ────────────────────────────────────
 function checkReady() {
   document.getElementById('go-btn').disabled = !(b64 && getKey());
 }
 
-// ── STEP ───────────────────────────────────────────
 function setStep(n) {
   ['s1','s2','s3','s4'].forEach((id,i) => {
     document.getElementById(id).className =
@@ -557,7 +525,6 @@ function setStep(n) {
   });
 }
 
-// ── MAIN ANALYZE ───────────────────────────────────
 async function analyze() {
   const key = getKey();
   const manifest = document.getElementById('manifest').value.trim();
@@ -597,7 +564,6 @@ async function analyze() {
   document.getElementById('go-btn').disabled = false;
 }
 
-// ── GEMINI API ─────────────────────────────────────
 async function callGemini(key, manifest) {
   const mText = manifest
     ? `THONG TIN MANIFEST / TO KHAI HAI QUAN:\n${manifest}`
@@ -632,8 +598,9 @@ Mo ta cu the tung vat the ban nhin thay:
 
 Viet bang tieng Viet, ngan gon, thuc te. Mo ta vat the cu the nhu nguoi co mat tai hien truong.`;
 
+  // ✅ ĐÃ SỬA: v1beta → v1, gemini-1.5-flash-latest → gemini-2.0-flash
   const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${key}`,
+    `https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${key}`,
     {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
@@ -657,9 +624,7 @@ Viet bang tieng Viet, ngan gon, thuc te. Mo ta vat the cu the nhu nguoi co mat t
   return data.candidates?.[0]?.content?.parts?.[0]?.text || 'Khong co ket qua.';
 }
 
-// ── RENDER ─────────────────────────────────────────
 function renderResults(text, manifest) {
-  // Verdict detection
   const tl = text.toLowerCase();
   let verdict = 'caution';
   if (/(giu lai|kiem tra thuc te|can kiem tra ngay|nghi van cao|khong phu hop)/.test(tl)) {
@@ -668,7 +633,6 @@ function renderResults(text, manifest) {
     verdict = 'clear';
   }
 
-  // VERDICT BOX
   const vb = document.getElementById('vbox');
   const vt = document.getElementById('vtitle');
   const vs = document.getElementById('vsub');
@@ -686,7 +650,6 @@ function renderResults(text, manifest) {
     vs.textContent = 'Can bo can xem xet cac diem luu y va doi chieu them thong tin truoc khi quyet dinh.';
   }
 
-  // VAT THE — parse section 1
   const objEl = document.getElementById('obj-list');
   const sec1 = getSection(text, ['1.', 'NHAN DIEN', 'vat the', 'Hinh dang']);
   const lines1 = parseBullets(sec1 || text, 6);
@@ -705,7 +668,6 @@ function renderResults(text, manifest) {
     </div>`;
   }).join('') || '<div style="color:var(--text2);font-size:13px;">Xem phan tich toan van ben duoi.</div>';
 
-  // COMPARE TABLE
   const mLines = manifest.split('\n').filter(l => l.trim());
   const cmpEl = document.getElementById('cmp-table');
   const isMatch  = verdict === 'clear';
@@ -728,7 +690,6 @@ function renderResults(text, manifest) {
       </div>
     </div>`;
 
-  // CHECKLIST — section 3
   const sec3 = getSection(text, ['3.', 'DIEM CAN', 'Cao:', 'doi chieu', 'kiem tra']);
   const items = parseBullets(sec3 || text, 7);
   const clEl = document.getElementById('checklist');
@@ -738,7 +699,6 @@ function renderResults(text, manifest) {
     return `<div class="chk-item ${lvl}"><div class="chk-icon">${icon}</div><div>${q}</div></div>`;
   }).join('') || '<div class="chk-item chk-low"><div class="chk-icon">📌</div><div>Xem phan tich toan van de biet chi tiet.</div></div>';
 
-  // FULL TEXT
   document.getElementById('full-text').innerHTML =
     text.replace(/\n/g,'<br>')
         .replace(/\*\*(.*?)\*\*/g,'<b style="color:var(--accent)">$1</b>')
@@ -775,7 +735,6 @@ function renderError(msg) {
   }
 }
 
-// ── DECISION ───────────────────────────────────────
 function decide(d) {
   const dr = document.getElementById('dec-result');
   const time = new Date().toLocaleString('vi-VN');
