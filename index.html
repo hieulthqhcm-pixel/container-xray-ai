@@ -1,1 +1,795 @@
-AIzaSyCK9REChhPQCXkU4q-Xx_wzsSFxzSIAkQQ
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>X-Ray Cargo Inspector</title>
+<style>
+:root{
+  --bg:#070c14;--bg2:#0c1520;--bg3:#101c2c;--card:#0d1825;
+  --border:#1a3550;--border2:#1f4068;
+  --accent:#00c6e0;--accent2:#0088bb;
+  --green:#00e096;--orange:#ff8c00;--red:#ff3b4e;--yellow:#ffd000;
+  --text:#ddeaf5;--text2:#6e96b5;--text3:#3d607a;
+  --r:12px;--font:-apple-system,'SF Pro Display','Helvetica Neue',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;padding-bottom:80px;}
+
+.hdr{
+  background:var(--bg2);border-bottom:1px solid var(--border);
+  padding:14px 16px 12px;position:sticky;top:0;z-index:100;
+}
+.hdr-row{display:flex;align-items:center;gap:10px;}
+.hdr-icon{
+  width:38px;height:38px;border-radius:10px;flex-shrink:0;
+  background:linear-gradient(135deg,#005f80,#00c6e0);
+  display:flex;align-items:center;justify-content:center;font-size:20px;
+}
+.hdr-title{font-size:17px;font-weight:700;letter-spacing:-.3px;}
+.hdr-sub{font-size:11px;color:var(--text2);margin-top:1px;}
+.free-badge{
+  margin-left:auto;padding:3px 9px;border-radius:20px;
+  background:rgba(0,224,150,0.12);border:1px solid rgba(0,224,150,0.3);
+  font-size:10px;font-weight:800;color:var(--green);letter-spacing:.4px;
+}
+
+.wrap{padding:14px;max-width:560px;margin:0 auto;}
+
+/* STEPS */
+.steps{display:flex;margin-bottom:16px;border-radius:8px;overflow:hidden;background:var(--bg3);}
+.step{
+  flex:1;text-align:center;padding:9px 4px;font-size:10px;font-weight:700;
+  color:var(--text3);letter-spacing:.4px;transition:all .2s;
+}
+.step.active{background:var(--accent2);color:#fff;}
+.step.done{color:var(--green);}
+
+/* CARD */
+.card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r);padding:16px;margin-bottom:12px;
+}
+.card-hd{
+  display:flex;align-items:center;gap:8px;margin-bottom:13px;
+  font-size:11px;font-weight:800;color:var(--accent);
+  text-transform:uppercase;letter-spacing:.8px;
+}
+.cnum{
+  width:22px;height:22px;border-radius:50%;background:var(--accent);
+  color:#000;font-size:11px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+
+/* SETUP CARD */
+.setup-row{display:flex;gap:8px;align-items:center;}
+.setup-inp{
+  flex:1;background:var(--bg3);border:1px solid var(--border2);
+  border-radius:8px;color:var(--text);font-family:var(--font);
+  font-size:13px;padding:10px 12px;outline:none;
+}
+.setup-inp:focus{border-color:var(--accent);}
+.setup-btn{
+  padding:10px 14px;border-radius:8px;border:none;
+  background:var(--accent2);color:#fff;
+  font-size:13px;font-weight:700;cursor:pointer;
+  font-family:var(--font);white-space:nowrap;
+}
+.setup-tip{
+  font-size:11px;color:var(--text3);margin-top:8px;line-height:1.6;
+}
+.setup-tip a{color:var(--accent);text-decoration:none;}
+.key-saved{
+  display:flex;align-items:center;gap:6px;padding:8px 12px;
+  background:rgba(0,224,150,0.08);border:1px solid rgba(0,224,150,0.2);
+  border-radius:8px;font-size:12px;color:var(--green);
+}
+
+/* TEXTAREA */
+textarea{
+  width:100%;background:var(--bg3);border:1px solid var(--border);
+  border-radius:8px;color:var(--text);font-family:var(--font);
+  font-size:14px;padding:12px;resize:none;outline:none;line-height:1.6;
+  transition:border-color .2s;
+}
+textarea:focus{border-color:var(--accent);}
+
+/* QUICK BTNS */
+.qrow{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
+.qbtn{
+  padding:5px 11px;border-radius:20px;font-size:11px;font-weight:700;
+  border:1px solid var(--border2);background:var(--bg3);
+  color:var(--text2);cursor:pointer;transition:all .1s;
+}
+.qbtn:active{background:var(--accent2);color:#fff;border-color:var(--accent2);}
+
+/* UPLOAD */
+.upload-zone{
+  border:2px dashed var(--border2);border-radius:var(--r);
+  padding:26px 16px;text-align:center;position:relative;
+  background:var(--bg3);cursor:pointer;transition:all .2s;
+}
+.upload-zone:active{border-color:var(--accent);}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:16px;}
+.upload-icon{font-size:34px;margin-bottom:8px;}
+.upload-main{font-size:15px;font-weight:700;}
+.upload-sub{font-size:12px;color:var(--text2);margin-top:3px;}
+.upload-tip{
+  margin-top:10px;padding:8px 12px;border-radius:8px;
+  background:rgba(0,198,224,0.06);font-size:11px;color:var(--text2);line-height:1.6;
+}
+
+/* IMAGE */
+.img-preview{display:none;margin-top:10px;}
+.img-wrap{border-radius:10px;overflow:hidden;background:#000;}
+.img-wrap img{width:100%;display:block;transition:filter .2s;}
+.fname{font-size:11px;color:var(--green);text-align:center;margin-top:6px;}
+
+/* LUT BAR */
+.lut-bar{display:flex;gap:4px;overflow-x:auto;margin-top:8px;padding-bottom:2px;}
+.lut-bar::-webkit-scrollbar{display:none;}
+.lbtn{
+  flex-shrink:0;padding:5px 12px;border-radius:20px;
+  font-size:11px;font-weight:700;
+  border:1px solid var(--border);background:var(--bg3);
+  color:var(--text2);cursor:pointer;transition:all .15s;
+}
+.lbtn.on{background:var(--accent2);color:#fff;border-color:var(--accent2);}
+
+/* ANALYZE BTN */
+.btn-go{
+  width:100%;padding:16px;border-radius:var(--r);border:none;
+  background:linear-gradient(90deg,#005f80,#00c6e0);
+  color:#fff;font-size:16px;font-weight:800;cursor:pointer;
+  font-family:var(--font);margin-bottom:12px;transition:all .15s;
+  letter-spacing:-.2px;
+}
+.btn-go:disabled{opacity:.4;cursor:not-allowed;}
+.btn-go:not(:disabled):active{transform:scale(.97);}
+
+/* LOADING */
+.loading{display:none;text-align:center;padding:28px 0;}
+.loading.on{display:block;}
+.spin{
+  width:40px;height:40px;border:3px solid var(--border2);
+  border-top-color:var(--accent);border-radius:50%;
+  animation:spin .7s linear infinite;margin:0 auto 12px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-txt{font-size:14px;color:var(--text2);}
+.load-step{font-size:11px;color:var(--text3);margin-top:4px;}
+
+/* RESULTS */
+#results{display:none;}
+
+/* VERDICT */
+.verdict{border-radius:var(--r);padding:16px;margin-bottom:12px;border:1px solid;}
+.v-hold{background:rgba(255,59,78,.07);border-color:rgba(255,59,78,.3);}
+.v-clear{background:rgba(0,224,150,.07);border-color:rgba(0,224,150,.3);}
+.v-caution{background:rgba(255,140,0,.07);border-color:rgba(255,140,0,.3);}
+.v-title{font-size:19px;font-weight:800;margin-bottom:6px;letter-spacing:-.4px;}
+.v-hold .v-title{color:var(--red);}
+.v-clear .v-title{color:var(--green);}
+.v-caution .v-title{color:var(--orange);}
+.v-sub{font-size:13px;line-height:1.6;color:var(--text);}
+
+/* AI BLOCK */
+.ai-block{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r);margin-bottom:12px;overflow:hidden;
+}
+.ai-hd{
+  padding:11px 14px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;
+  background:rgba(0,198,224,.04);
+}
+.ai-hd-title{font-size:11px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:.7px;}
+.ai-hd-badge{
+  margin-left:auto;padding:2px 8px;border-radius:10px;
+  background:rgba(0,198,224,.15);font-size:10px;font-weight:800;color:var(--accent);
+}
+.ai-body{padding:14px;}
+
+/* OBJECT ITEMS */
+.obj-item{
+  padding:10px 0;border-bottom:1px solid rgba(26,53,80,.5);
+  display:flex;gap:10px;
+}
+.obj-item:last-child{border-bottom:none;}
+.obj-dot{
+  width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0;
+}
+.dot-ok{background:var(--green);}
+.dot-warn{background:var(--orange);}
+.dot-bad{background:var(--red);}
+.obj-text{font-size:13px;line-height:1.6;color:var(--text);}
+.obj-tag{
+  display:inline-block;margin-top:4px;padding:2px 8px;border-radius:10px;
+  font-size:10px;font-weight:800;
+}
+.tag-ok{background:rgba(0,224,150,.12);color:var(--green);}
+.tag-warn{background:rgba(255,140,0,.12);color:var(--orange);}
+.tag-bad{background:rgba(255,59,78,.12);color:var(--red);}
+.tag-info{background:rgba(0,198,224,.12);color:var(--accent);}
+
+/* COMPARE TABLE */
+.cmp-table{width:100%;}
+.cmp-row{
+  display:flex;justify-content:space-between;
+  padding:8px 0;border-bottom:1px solid rgba(26,53,80,.4);
+  font-size:13px;gap:10px;
+}
+.cmp-row:last-child{border-bottom:none;}
+.cmp-lbl{color:var(--text2);font-size:11px;flex-shrink:0;width:100px;}
+.cmp-val{font-weight:600;text-align:right;flex:1;font-size:12px;}
+.match{color:var(--green);}
+.mismatch{color:var(--red);}
+.neutral{color:var(--text);}
+
+/* CHECKLIST */
+.chk-item{
+  display:flex;gap:10px;padding:10px 12px;margin-bottom:6px;
+  background:var(--bg3);border-radius:8px;border-left:3px solid;
+  font-size:13px;line-height:1.6;color:var(--text);
+}
+.chk-high{border-left-color:var(--red);}
+.chk-mid{border-left-color:var(--orange);}
+.chk-low{border-left-color:var(--accent);}
+.chk-icon{flex-shrink:0;font-size:14px;margin-top:1px;}
+
+/* FULL TEXT */
+.full-text{
+  font-size:13px;line-height:1.8;color:var(--text);
+  background:var(--bg3);border-radius:8px;padding:14px;
+  border-left:3px solid var(--accent2);
+}
+
+/* ANNOTATE */
+.ann-block{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r);margin-bottom:12px;overflow:hidden;
+}
+.ann-hd{
+  padding:11px 14px;border-bottom:1px solid var(--border);
+  font-size:11px;font-weight:800;color:var(--yellow);
+  text-transform:uppercase;letter-spacing:.7px;display:flex;align-items:center;gap:6px;
+}
+.ann-body{padding:14px;}
+.ann-note{
+  width:100%;background:var(--bg3);border:1px solid var(--border);
+  border-radius:8px;color:var(--text);font-family:var(--font);
+  font-size:13px;padding:10px;resize:none;outline:none;min-height:75px;
+  line-height:1.6;
+}
+.ann-note:focus{border-color:var(--yellow);}
+.dec-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
+.dbtn{
+  padding:14px;border-radius:10px;border:1px solid;
+  font-size:14px;font-weight:800;cursor:pointer;
+  font-family:var(--font);transition:all .15s;text-align:center;
+}
+.d-clear{background:rgba(0,224,150,.1);border-color:rgba(0,224,150,.4);color:var(--green);}
+.d-hold{background:rgba(255,59,78,.1);border-color:rgba(255,59,78,.4);color:var(--red);}
+.dbtn:active{transform:scale(.95);}
+.dec-result{
+  margin-top:10px;padding:14px;border-radius:10px;
+  text-align:center;font-size:15px;font-weight:800;display:none;
+}
+.dr-clear{background:rgba(0,224,150,.1);color:var(--green);}
+.dr-hold{background:rgba(255,59,78,.1);color:var(--red);}
+
+/* ERROR */
+.err-box{
+  background:rgba(255,59,78,.07);border:1px solid rgba(255,59,78,.3);
+  border-radius:8px;padding:14px;font-size:13px;line-height:1.7;color:var(--text);
+  margin-bottom:12px;
+}
+.err-box b{color:var(--red);}
+
+.tip{font-size:11px;color:var(--text3);margin-top:6px;line-height:1.6;}
+.tip b{color:var(--text2);}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-row">
+    <div class="hdr-icon">📦</div>
+    <div>
+      <div class="hdr-title">X-Ray Cargo Inspector</div>
+      <div class="hdr-sub">Ho tro phan tich anh soi chieu · Hai quan</div>
+    </div>
+    <div class="free-badge">MIEN PHI</div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="steps">
+    <div class="step active" id="s1">SETUP</div>
+    <div class="step" id="s2">MANIFEST</div>
+    <div class="step" id="s3">ANH SOI</div>
+    <div class="step" id="s4">KET QUA</div>
+  </div>
+
+  <!-- SETUP -->
+  <div class="card" id="setup-card">
+    <div class="card-hd"><div class="cnum">0</div>Cai dat Gemini API (1 lan duy nhat)</div>
+    <div id="key-status"></div>
+    <div class="setup-row">
+      <input class="setup-inp" type="password" id="api-inp"
+             placeholder="AIza..." autocomplete="off" autocorrect="off" spellcheck="false">
+      <button class="setup-btn" onclick="saveKey()">Luu key</button>
+    </div>
+    <div class="setup-tip">
+      Lay API key mien phi tai <a href="https://aistudio.google.com" target="_blank">aistudio.google.com</a>
+      → Dang nhap Gmail → Bam <b>"Get API Key"</b> → <b>"Create API Key"</b><br>
+      Mien phi 1,500 anh/ngay · Key luu trong dien thoai anh, khong gui di dau.
+    </div>
+  </div>
+
+  <!-- MANIFEST -->
+  <div class="card">
+    <div class="card-hd"><div class="cnum">1</div>Thong tin Manifest / To khai</div>
+    <textarea id="manifest" rows="5"
+      placeholder="Nhap thong tin khai bao:&#10;- Ten hang, ma HS code&#10;- So luong, trong luong, don vi&#10;- Xuat xu, hang tau, noi den&#10;&#10;Vi du: 500 CARTON GARMENT (SHIRT), HS 6205, 8,500 KGS, VIETNAM"></textarea>
+    <div class="qrow">
+      <div class="qbtn" onclick="qfill('machinery')">May moc</div>
+      <div class="qbtn" onclick="qfill('textile')">Det may</div>
+      <div class="qbtn" onclick="qfill('chemical')">Hoa chat</div>
+      <div class="qbtn" onclick="qfill('electronics')">Dien tu</div>
+      <div class="qbtn" onclick="qfill('food')">Thuc pham</div>
+      <div class="qbtn" onclick="qfill('ceramic')">Gom su</div>
+      <div class="qbtn" onclick="qfill('plastic')">Nhua</div>
+    </div>
+    <div class="tip" style="margin-top:8px;">
+      Nhap cang day du thong tin cang tot.
+      <b>AI se doi chieu hinh dang vat the trong anh voi noi dung khai bao.</b>
+    </div>
+  </div>
+
+  <!-- UPLOAD -->
+  <div class="card">
+    <div class="card-hd"><div class="cnum">2</div>Upload anh X-ray soi chieu</div>
+    <div class="upload-zone" id="uz">
+      <input type="file" id="file-inp" accept="image/*" onchange="handleFile(this)">
+      <div class="upload-icon">📷</div>
+      <div class="upload-main">Chon anh X-ray</div>
+      <div class="upload-sub">Chup man hinh may soi · JPG · PNG</div>
+      <div class="upload-tip">
+        Chup truc tiep man hinh may Rapiscan / Nuctech / L3 tu iPhone.<br>
+        AI se nhan dien hinh dang vat the va so voi manifest.
+      </div>
+    </div>
+    <div class="img-preview" id="img-preview">
+      <div class="img-wrap">
+        <img id="pimg" src="" alt="X-ray">
+      </div>
+      <div class="fname" id="fname"></div>
+      <div class="lut-bar">
+        <div class="lbtn on" onclick="lut(this,'none')">Goc</div>
+        <div class="lbtn" onclick="lut(this,'invert')">Dao mau</div>
+        <div class="lbtn" onclick="lut(this,'contrast')">Tuong phan</div>
+        <div class="lbtn" onclick="lut(this,'bright')">Sang hon</div>
+        <div class="lbtn" onclick="lut(this,'edge')">Vien vat the</div>
+        <div class="lbtn" onclick="lut(this,'heatmap')">Heatmap</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BTN -->
+  <button class="btn-go" id="go-btn" onclick="analyze()" disabled>
+    Phan tich anh X-ray
+  </button>
+
+  <!-- LOADING -->
+  <div class="loading" id="loading">
+    <div class="spin"></div>
+    <div class="load-txt">AI dang phan tich anh...</div>
+    <div class="load-step" id="lstep">Nhan dien hinh dang vat the...</div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results">
+
+    <!-- VERDICT -->
+    <div id="vbox" class="verdict v-caution">
+      <div class="v-title" id="vtitle">DANG DANH GIA</div>
+      <div class="v-sub" id="vsub"></div>
+    </div>
+
+    <!-- VAT THE -->
+    <div class="ai-block">
+      <div class="ai-hd">
+        <span>🔍</span>
+        <span class="ai-hd-title">Nhan dien vat the trong anh</span>
+        <span class="ai-hd-badge">GEMINI VISION</span>
+      </div>
+      <div class="ai-body">
+        <div id="obj-list"></div>
+      </div>
+    </div>
+
+    <!-- DOI CHIEU MANIFEST -->
+    <div class="ai-block">
+      <div class="ai-hd">
+        <span>📋</span>
+        <span class="ai-hd-title">Doi chieu Manifest</span>
+      </div>
+      <div class="ai-body">
+        <div class="cmp-table" id="cmp-table"></div>
+      </div>
+    </div>
+
+    <!-- CAU HOI DOI CHIEU -->
+    <div class="ai-block">
+      <div class="ai-hd">
+        <span>❓</span>
+        <span class="ai-hd-title">Diem can doi chieu kiem tra</span>
+        <span class="ai-hd-badge">NGHIEP VU</span>
+      </div>
+      <div class="ai-body">
+        <div id="checklist"></div>
+      </div>
+    </div>
+
+    <!-- PHAN TICH TOAN VAN -->
+    <div class="ai-block">
+      <div class="ai-hd">
+        <span>📄</span>
+        <span class="ai-hd-title">Phan tich toan van</span>
+      </div>
+      <div class="ai-body">
+        <div class="full-text" id="full-text"></div>
+      </div>
+    </div>
+
+    <!-- ANNOTATE -->
+    <div class="ann-block">
+      <div class="ann-hd">📝 Ghi chu va Quyet dinh can bo</div>
+      <div class="ann-body">
+        <textarea class="ann-note" id="note"
+          placeholder="Ghi chu:&#10;- Nhan xet ve hang hoa&#10;- Diem bat thuong phat hien&#10;- Ly do quyet dinh..."></textarea>
+        <div class="dec-btns">
+          <button class="dbtn d-clear" onclick="decide('CLEAR')">THONG QUAN</button>
+          <button class="dbtn d-hold" onclick="decide('HOLD')">GIAM GIU / KIEM TRA</button>
+        </div>
+        <div class="dec-result" id="dec-result"></div>
+      </div>
+    </div>
+
+  </div><!-- /results -->
+</div>
+
+<script>
+// ── STATE ──────────────────────────────────────────
+let b64 = null, mime = 'image/jpeg';
+
+// ── API KEY ────────────────────────────────────────
+function saveKey() {
+  const k = document.getElementById('api-inp').value.trim();
+  if (!k.startsWith('AIza')) {
+    alert('Key khong hop le. Phai bat dau bang AIza...');
+    return;
+  }
+  localStorage.setItem('gemini_key', k);
+  showKeyStatus(true);
+  checkReady();
+}
+function getKey() { return localStorage.getItem('gemini_key') || ''; }
+
+function showKeyStatus(saved) {
+  const el = document.getElementById('key-status');
+  if (saved) {
+    el.innerHTML = '<div class="key-saved">✅ Da luu API key Gemini · San sang su dung</div>';
+    el.style.marginBottom = '10px';
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  const k = getKey();
+  if (k) {
+    document.getElementById('api-inp').value = k;
+    showKeyStatus(true);
+  }
+  checkReady();
+});
+
+// ── MANIFEST QUICK FILL ────────────────────────────
+const tpls = {
+  machinery:   '01 UNIT EXCAVATOR PC200-8M0\nHS CODE: 8429.52.00\nWEIGHT: 18,500 KGS\nORIGIN: JAPAN\nBrand: Komatsu, Year: 2022',
+  textile:     '500 CARTONS GARMENT (SHIRTS & PANTS)\nHS CODE: 6205.20.00 / 6203.42.00\nWEIGHT: 8,500 KGS · 15,000 PCS\nMADE IN VIETNAM · DESTINATION: EU',
+  chemical:    '20 DRUMS PAINT WATER-BASED\nHS CODE: 3209.10.00\n200KG/DRUM · TOTAL: 4,000 KGS\nUN: N/A · NON-HAZARDOUS · ORIGIN: CHINA',
+  electronics: '100 CTNS LAPTOP COMPUTER\nHS CODE: 8471.30.10\n500 UNITS · 2,500 KGS\nBRAND: ASUS · MADE IN CHINA',
+  food:        '1,000 BAGS JASMINE RICE\nHS CODE: 1006.30.10\n50KGS/BAG · TOTAL: 50,000 KGS\nVIETNAM ORIGIN · CERT: VSATP-2024',
+  ceramic:     '200 CTNS CERAMIC FLOOR TILES 60x60CM\nHS CODE: 6907.21.00\nWEIGHT: 8,000 KGS · MADE IN CHINA',
+  plastic:     '300 CTNS PLASTIC HOUSEHOLD ITEMS\nHS CODE: 3924.10.00\nWEIGHT: 6,000 KGS · MADE IN CHINA',
+};
+function qfill(t) { document.getElementById('manifest').value = tpls[t] || ''; }
+
+// ── FILE HANDLING ──────────────────────────────────
+function handleFile(inp) {
+  const f = inp.files[0];
+  if (!f) return;
+  mime = f.type || 'image/jpeg';
+  const r = new FileReader();
+  r.onload = e => {
+    b64 = e.target.result.split(',')[1];
+    document.getElementById('pimg').src = e.target.result;
+    document.getElementById('fname').textContent = f.name;
+    document.getElementById('img-preview').style.display = 'block';
+    setStep(3);
+    checkReady();
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('dec-result').style.display = 'none';
+  };
+  r.readAsDataURL(f);
+}
+
+// ── LUT FILTERS ────────────────────────────────────
+function lut(btn, mode) {
+  document.querySelectorAll('.lbtn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  const img = document.getElementById('pimg');
+  const f = {
+    none:    'none',
+    invert:  'invert(100%)',
+    contrast:'contrast(200%) brightness(110%)',
+    bright:  'brightness(170%) contrast(110%)',
+    edge:    'contrast(400%) brightness(70%) saturate(0%) invert(0%)',
+    heatmap: 'sepia(100%) saturate(400%) hue-rotate(300deg) contrast(150%)',
+  };
+  img.style.filter = f[mode] || 'none';
+}
+
+// ── CHECK READY ────────────────────────────────────
+function checkReady() {
+  document.getElementById('go-btn').disabled = !(b64 && getKey());
+}
+
+// ── STEP ───────────────────────────────────────────
+function setStep(n) {
+  ['s1','s2','s3','s4'].forEach((id,i) => {
+    document.getElementById(id).className =
+      'step' + (i+1 < n ? ' done' : i+1 === n ? ' active' : '');
+  });
+}
+
+// ── MAIN ANALYZE ───────────────────────────────────
+async function analyze() {
+  const key = getKey();
+  const manifest = document.getElementById('manifest').value.trim();
+  if (!key || !b64) return;
+
+  setStep(3);
+  document.getElementById('loading').classList.add('on');
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('go-btn').disabled = true;
+
+  const lsteps = [
+    'Nhan dien hinh dang vat the...',
+    'Phan tich mat do va cau truc...',
+    'Doi chieu thong tin manifest...',
+    'Danh gia rui ro nghiep vu...',
+    'Tong hop ket qua...',
+  ];
+  let si = 0;
+  const timer = setInterval(() => {
+    document.getElementById('lstep').textContent = lsteps[si++ % lsteps.length];
+  }, 1600);
+
+  try {
+    const text = await callGemini(key, manifest);
+    clearInterval(timer);
+    renderResults(text, manifest);
+    document.getElementById('loading').classList.remove('on');
+    document.getElementById('results').style.display = 'block';
+    setStep(4);
+    setTimeout(() => document.getElementById('results').scrollIntoView({behavior:'smooth'}), 100);
+  } catch(e) {
+    clearInterval(timer);
+    document.getElementById('loading').classList.remove('on');
+    document.getElementById('results').style.display = 'block';
+    renderError(e.message);
+  }
+  document.getElementById('go-btn').disabled = false;
+}
+
+// ── GEMINI API ─────────────────────────────────────
+async function callGemini(key, manifest) {
+  const mText = manifest
+    ? `THONG TIN MANIFEST / TO KHAI HAI QUAN:\n${manifest}`
+    : 'Chua co thong tin manifest.';
+
+  const prompt = `Ban la chuyen gia phan tich anh X-ray tai cang bien, ho tro can bo hai quan Viet Nam.
+
+${mText}
+
+Hay phan tich anh X-ray soi chieu container theo dung quy trinh nghiep vu hai quan:
+
+**1. NHAN DIEN VAT THE:**
+Mo ta cu the tung vat the ban nhin thay:
+- Hinh dang gi? (Khung may, thung phuy, kien hang, vat the la...)
+- Kich thuoc tuong doi, vi tri trong container (trai/phai/giua, tren/duoi)
+- Lien tuong trong thuc te la gi? ("Trong giong may xuc", "Co ve la thung phi 200L", "Hinh dang kien hang ep khat")
+- Mau sac/do toi sang: Toi = kim loai dac; Trung binh xam = hang huu co/nhua; Sang = hang nhe
+
+**2. DOI CHIEU MANIFEST:**
+- Hang khai bao la gi?
+- Hinh dang trong anh CO PHU HOP khong? Tai sao?
+- Co gi KHAC BIET / BAT TUONG giua anh va to khai?
+
+**3. DIEM CAN DOI CHIEU (liet ke ro, co trong so uu tien):**
+- Cao: [nhung gi rat dang nghi, can kiem tra ngay]
+- Trung binh: [nhung gi can luu y]  
+- Thap: [nhung gi can xac minh them]
+
+**4. KHUYEN NGHI CUOI:**
+- THONG QUAN / GIU LAI KIEM TRA / CAN THEM THONG TIN
+- Ly do cu the bang mot cau
+
+Viet bang tieng Viet, ngan gon, thuc te. Mo ta vat the cu the nhu nguoi co mat tai hien truong.`;
+
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,
+    {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        contents: [{
+          parts: [
+            { inline_data: { mime_type: mime, data: b64 } },
+            { text: prompt }
+          ]
+        }],
+        generationConfig: { maxOutputTokens: 2000, temperature: 0.3 }
+      })
+    }
+  );
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    const msg = err.error?.message || `Loi ${res.status}`;
+    throw new Error(msg);
+  }
+  const data = await res.json();
+  return data.candidates?.[0]?.content?.parts?.[0]?.text || 'Khong co ket qua.';
+}
+
+// ── RENDER ─────────────────────────────────────────
+function renderResults(text, manifest) {
+  // Verdict detection
+  const tl = text.toLowerCase();
+  let verdict = 'caution';
+  if (/(giu lai|kiem tra thuc te|can kiem tra ngay|nghi van cao|khong phu hop)/.test(tl)) {
+    verdict = 'hold';
+  } else if (/thong quan/.test(tl) && /phu hop/.test(tl) && !/khong phu hop/.test(tl)) {
+    verdict = 'clear';
+  }
+
+  // VERDICT BOX
+  const vb = document.getElementById('vbox');
+  const vt = document.getElementById('vtitle');
+  const vs = document.getElementById('vsub');
+  if (verdict === 'hold') {
+    vb.className = 'verdict v-hold';
+    vt.textContent = '🔴 GIU LAI — CAN KIEM TRA THUC TE';
+    vs.textContent = 'Phat hien dau hieu bat thuong giua anh X-ray va thong tin khai bao. De nghi can bo tien hanh kiem tra truc tiep truoc khi thong quan.';
+  } else if (verdict === 'clear') {
+    vb.className = 'verdict v-clear';
+    vt.textContent = '🟢 ANH PHU HOP MANIFEST';
+    vs.textContent = 'Hinh dang vat the trong anh tuong doi phu hop voi hang hoa khai bao. Can bo xem xet cac luu y duoi day truoc khi quyet dinh.';
+  } else {
+    vb.className = 'verdict v-caution';
+    vt.textContent = '🟡 CAN DOI CHIEU THEM';
+    vs.textContent = 'Can bo can xem xet cac diem luu y va doi chieu them thong tin truoc khi quyet dinh.';
+  }
+
+  // VAT THE — parse section 1
+  const objEl = document.getElementById('obj-list');
+  const sec1 = getSection(text, ['1.', 'NHAN DIEN', 'vat the', 'Hinh dang']);
+  const lines1 = parseBullets(sec1 || text, 6);
+  objEl.innerHTML = lines1.map((l, i) => {
+    const isBad  = /bat thuong|che|la|khac|nghi|khong ro|an giau/.test(l.toLowerCase());
+    const isWarn = /luu y|kiem tra|xem xet|can|dang chu y/.test(l.toLowerCase());
+    const cls = isBad ? 'dot-bad' : isWarn ? 'dot-warn' : 'dot-ok';
+    const tag = isBad
+      ? '<span class="obj-tag tag-bad">Can kiem tra</span>'
+      : isWarn
+        ? '<span class="obj-tag tag-warn">Luu y</span>'
+        : '<span class="obj-tag tag-ok">Binh thuong</span>';
+    return `<div class="obj-item">
+      <div class="obj-dot ${cls}"></div>
+      <div class="obj-text">${l}${tag}</div>
+    </div>`;
+  }).join('') || '<div style="color:var(--text2);font-size:13px;">Xem phan tich toan van ben duoi.</div>';
+
+  // COMPARE TABLE
+  const mLines = manifest.split('\n').filter(l => l.trim());
+  const cmpEl = document.getElementById('cmp-table');
+  const isMatch  = verdict === 'clear';
+  const isMismatch = verdict === 'hold';
+  cmpEl.innerHTML = `
+    <div class="cmp-row">
+      <div class="cmp-lbl">Hang khai bao</div>
+      <div class="cmp-val neutral">${mLines[0] || 'Chua nhap'}</div>
+    </div>
+    <div class="cmp-row">
+      <div class="cmp-lbl">Anh nhan dang</div>
+      <div class="cmp-val ${isMismatch?'mismatch':isMatch?'match':'neutral'}">
+        ${isMismatch?'KHONG PHU HOP':isMatch?'PHU HOP':'Can doi chieu'}
+      </div>
+    </div>
+    <div class="cmp-row">
+      <div class="cmp-lbl">Danh gia</div>
+      <div class="cmp-val ${isMismatch?'mismatch':isMatch?'match':'neutral'}">
+        ${isMismatch?'NGHI VAN — Giu lai':isMatch?'OK — Co the thong quan':'Can xem xet them'}
+      </div>
+    </div>`;
+
+  // CHECKLIST — section 3
+  const sec3 = getSection(text, ['3.', 'DIEM CAN', 'Cao:', 'doi chieu', 'kiem tra']);
+  const items = parseBullets(sec3 || text, 7);
+  const clEl = document.getElementById('checklist');
+  clEl.innerHTML = items.map((q, i) => {
+    const lvl = i === 0 ? 'chk-high' : i <= 2 ? 'chk-mid' : 'chk-low';
+    const icon = i === 0 ? '❗' : i <= 2 ? '⚠️' : '📌';
+    return `<div class="chk-item ${lvl}"><div class="chk-icon">${icon}</div><div>${q}</div></div>`;
+  }).join('') || '<div class="chk-item chk-low"><div class="chk-icon">📌</div><div>Xem phan tich toan van de biet chi tiet.</div></div>';
+
+  // FULL TEXT
+  document.getElementById('full-text').innerHTML =
+    text.replace(/\n/g,'<br>')
+        .replace(/\*\*(.*?)\*\*/g,'<b style="color:var(--accent)">$1</b>')
+        .replace(/\*(.*?)\*/g,'<i>$1</i>');
+}
+
+function getSection(text, keys) {
+  const lines = text.split('\n');
+  let start = -1;
+  for (let i = 0; i < lines.length; i++) {
+    const l = lines[i].toLowerCase();
+    if (keys.some(k => l.includes(k.toLowerCase()))) { start = i + 1; break; }
+  }
+  if (start < 0) return null;
+  return lines.slice(start, start + 14).join('\n');
+}
+
+function parseBullets(text, max) {
+  if (!text) return [];
+  return text.split('\n')
+    .map(l => l.replace(/^[\s*\-•\d.]+/, '').trim())
+    .filter(l => l.length > 12 && l.length < 250)
+    .slice(0, max);
+}
+
+function renderError(msg) {
+  const r = document.getElementById('results');
+  if (/401|api.?key|invalid/i.test(msg)) {
+    r.innerHTML = `<div class="err-box"><b>Loi API Key:</b> Key khong hop le.<br><br>Vao <b>aistudio.google.com</b> tao key moi, nhap lai o tren.</div>`;
+  } else if (/429/.test(msg)) {
+    r.innerHTML = `<div class="err-box"><b>Qua gioi han:</b> Da dung qua nhieu request. Cho 1 phut roi thu lai.</div>`;
+  } else {
+    r.innerHTML = `<div class="err-box"><b>Loi ket noi:</b> ${msg}<br><br>Kiem tra wifi / 4G va thu lai.</div>`;
+  }
+}
+
+// ── DECISION ───────────────────────────────────────
+function decide(d) {
+  const dr = document.getElementById('dec-result');
+  const time = new Date().toLocaleString('vi-VN');
+  if (d === 'CLEAR') {
+    dr.className = 'dec-result dr-clear';
+    dr.innerHTML = `✅ THONG QUAN<br><small style="font-size:11px;opacity:.7">${time}</small>`;
+  } else {
+    dr.className = 'dec-result dr-hold';
+    dr.innerHTML = `🔴 GIAM GIU — KIEM TRA THUC TE<br><small style="font-size:11px;opacity:.7">${time}</small>`;
+  }
+  dr.style.display = 'block';
+  dr.scrollIntoView({behavior:'smooth'});
+}
+</script>
+</body>
+</html>
+
