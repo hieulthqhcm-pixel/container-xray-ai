@@ -2,63 +2,220 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
-<title>X-Ray Cargo Inspector V8 Pro</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>X-Ray Cargo Inspector V8 Pro FIXED</title>
 <style>
-:root{--bg:#070c14;--bg2:#0c1520;--bg3:#101c2c;--card:#0d1825;--border:#1a3550;--border2:#1f4068;--accent:#00c6e0;--accent2:#0088bb;--green:#00e096;--orange:#ff8c00;--red:#ff3b4e;--yellow:#ffd000;--text:#ddeaf5;--text2:#6e96b5;--text3:#3d607a;--r:12px;--font:-apple-system,'SF Pro Display','Helvetica Neue',Arial,sans-serif}
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;padding-bottom:80px}.hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 16px 12px;position:sticky;top:0;z-index:100}.hdr-row{display:flex;align-items:center;gap:10px}.hdr-icon{width:38px;height:38px;border-radius:10px;flex-shrink:0;background:linear-gradient(135deg,#005f80,#00c6e0);display:flex;align-items:center;justify-content:center;font-size:20px}.hdr-title{font-size:17px;font-weight:800;letter-spacing:-.3px}.hdr-sub{font-size:11px;color:var(--text2);margin-top:1px}.free-badge{margin-left:auto;padding:3px 9px;border-radius:20px;background:rgba(255,208,0,.12);border:1px solid rgba(255,208,0,.35);font-size:10px;font-weight:900;color:var(--yellow);letter-spacing:.4px}.wrap{padding:14px;max-width:640px;margin:0 auto}.steps{display:flex;margin-bottom:16px;border-radius:8px;overflow:hidden;background:var(--bg3)}.step{flex:1;text-align:center;padding:9px 4px;font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.4px;transition:all .2s}.step.active{background:var(--accent2);color:#fff}.step.done{color:var(--green)}.card,.ai-block,.ann-block{background:var(--card);border:1px solid var(--border);border-radius:var(--r);margin-bottom:12px}.card{padding:16px}.card-hd,.ai-hd,.ann-hd{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.8px}.card-hd{margin-bottom:13px;color:var(--accent)}.ai-hd{padding:11px 14px;border-bottom:1px solid var(--border);background:rgba(0,198,224,.04);color:var(--accent)}.ann-hd{padding:11px 14px;border-bottom:1px solid var(--border);color:var(--yellow)}.cnum{width:22px;height:22px;border-radius:50%;background:var(--accent);color:#000;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0}.setup-row{display:flex;gap:8px;align-items:center}.setup-inp,textarea,.ann-note{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:var(--font);font-size:13px;padding:10px 12px;outline:none}.setup-inp:focus,textarea:focus,.ann-note:focus{border-color:var(--accent)}.setup-btn{padding:10px 14px;border-radius:8px;border:none;background:var(--accent2);color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);white-space:nowrap}.setup-tip,.tip{font-size:11px;color:var(--text3);margin-top:8px;line-height:1.6}.setup-tip a{color:var(--accent);text-decoration:none}.key-saved{display:flex;align-items:center;gap:6px;padding:8px 12px;background:rgba(0,224,150,.08);border:1px solid rgba(0,224,150,.2);border-radius:8px;font-size:12px;color:var(--green)}textarea{font-size:14px;resize:none;line-height:1.6}.qrow{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}.qbtn{padding:5px 11px;border-radius:20px;font-size:11px;font-weight:800;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);cursor:pointer}.upload-zone{border:2px dashed var(--border2);border-radius:var(--r);padding:26px 16px;text-align:center;position:relative;background:var(--bg3);cursor:pointer}.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:16px}.upload-icon{font-size:34px;margin-bottom:8px}.upload-main{font-size:15px;font-weight:800}.upload-sub{font-size:12px;color:var(--text2);margin-top:3px}.upload-tip{margin-top:10px;padding:8px 12px;border-radius:8px;background:rgba(0,198,224,.06);font-size:11px;color:var(--text2);line-height:1.6}.img-preview{display:none;margin-top:10px}.img-wrap{border-radius:10px;overflow:hidden;background:#000}.img-wrap img{width:100%;display:block;transition:filter .2s}.fname{font-size:11px;color:var(--green);text-align:center;margin-top:6px}.lut-bar{display:flex;gap:4px;overflow-x:auto;margin-top:8px;padding-bottom:2px}.lut-bar::-webkit-scrollbar{display:none}.lbtn{flex-shrink:0;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:800;border:1px solid var(--border);background:var(--bg3);color:var(--text2);cursor:pointer}.lbtn.on{background:var(--accent2);color:#fff;border-color:var(--accent2)}.btn-go{width:100%;padding:16px;border-radius:var(--r);border:none;background:linear-gradient(90deg,#005f80,#00c6e0);color:#fff;font-size:16px;font-weight:900;cursor:pointer;font-family:var(--font);margin-bottom:12px;letter-spacing:-.2px}.btn-go:disabled{opacity:.4;cursor:not-allowed}.loading{display:none;text-align:center;padding:28px 0}.loading.on{display:block}.spin{width:40px;height:40px;border:3px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}@keyframes spin{to{transform:rotate(360deg)}}.load-txt{font-size:14px;color:var(--text2)}.load-step{font-size:11px;color:var(--text3);margin-top:4px}#results{display:none}.verdict{border-radius:var(--r);padding:16px;margin-bottom:12px;border:1px solid}.v-hold{background:rgba(255,59,78,.07);border-color:rgba(255,59,78,.3)}.v-clear{background:rgba(0,224,150,.07);border-color:rgba(0,224,150,.3)}.v-caution{background:rgba(255,140,0,.07);border-color:rgba(255,140,0,.3)}.v-title{font-size:19px;font-weight:900;margin-bottom:6px;letter-spacing:-.4px}.v-hold .v-title{color:var(--red)}.v-clear .v-title{color:var(--green)}.v-caution .v-title{color:var(--orange)}.v-sub{font-size:13px;line-height:1.6;color:var(--text)}.ai-body,.ann-body{padding:14px}.ai-hd-badge{margin-left:auto;padding:2px 8px;border-radius:10px;background:rgba(0,198,224,.15);font-size:10px;font-weight:900;color:var(--accent)}.obj-item{padding:10px 0;border-bottom:1px solid rgba(26,53,80,.5);display:flex;gap:10px}.obj-item:last-child{border-bottom:none}.obj-dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0}.dot-ok{background:var(--green)}.dot-warn{background:var(--orange)}.dot-bad{background:var(--red)}.obj-text{font-size:13px;line-height:1.6;color:var(--text)}.obj-tag{display:inline-block;margin-top:4px;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:900}.tag-ok{background:rgba(0,224,150,.12);color:var(--green)}.tag-warn{background:rgba(255,140,0,.12);color:var(--orange)}.tag-bad{background:rgba(255,59,78,.12);color:var(--red)}.cmp-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(26,53,80,.4);font-size:13px;gap:10px}.cmp-row:last-child{border-bottom:none}.cmp-lbl{color:var(--text2);font-size:11px;flex-shrink:0;width:110px}.cmp-val{font-weight:700;text-align:right;flex:1;font-size:12px}.match{color:var(--green)}.mismatch{color:var(--red)}.neutral{color:var(--text)}.chk-item{display:flex;gap:10px;padding:10px 12px;margin-bottom:6px;background:var(--bg3);border-radius:8px;border-left:3px solid;font-size:13px;line-height:1.6;color:var(--text)}.chk-high{border-left-color:var(--red)}.chk-mid{border-left-color:var(--orange)}.chk-low{border-left-color:var(--accent)}.chk-icon{flex-shrink:0;font-size:14px;margin-top:1px}.full-text{font-size:13px;line-height:1.8;color:var(--text);background:var(--bg3);border-radius:8px;padding:14px;border-left:3px solid var(--accent2);white-space:normal}.ann-note{min-height:75px;resize:none;line-height:1.6}.dec-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.dbtn{padding:14px;border-radius:10px;border:1px solid;font-size:14px;font-weight:900;cursor:pointer;font-family:var(--font);text-align:center}.d-clear{background:rgba(0,224,150,.1);border-color:rgba(0,224,150,.4);color:var(--green)}.d-hold{background:rgba(255,59,78,.1);border-color:rgba(255,59,78,.4);color:var(--red)}.dec-result{margin-top:10px;padding:14px;border-radius:10px;text-align:center;font-size:15px;font-weight:900;display:none}.dr-clear{background:rgba(0,224,150,.1);color:var(--green)}.dr-hold{background:rgba(255,59,78,.1);color:var(--red)}.err-box{background:rgba(255,59,78,.07);border:1px solid rgba(255,59,78,.3);border-radius:8px;padding:14px;font-size:13px;line-height:1.7;color:var(--text);margin-bottom:12px}.err-box b{color:var(--red)}.riskbox{display:grid;grid-template-columns:110px 1fr;gap:12px;align-items:center}.risk-circle{width:104px;height:104px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--orange) 0deg,var(--orange) 180deg,rgba(255,255,255,.07) 180deg);border:1px solid var(--border2)}.risk-num{font-size:28px;font-weight:900}.risk-lbl{font-size:11px;color:var(--text2);text-align:center}.risk-bars{display:grid;gap:8px}.bar-row{display:grid;grid-template-columns:92px 1fr 34px;gap:8px;align-items:center;font-size:11px;color:var(--text2)}.bar{height:8px;background:var(--bg3);border-radius:20px;overflow:hidden}.bar>i{display:block;height:100%;width:0;background:var(--accent);border-radius:20px}.zone-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.zone{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px;min-height:72px}.zone-title{font-size:11px;font-weight:900;color:var(--accent);margin-bottom:5px}.zone-text{font-size:12px;line-height:1.45;color:var(--text2)}.pre-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.pre-card{background:var(--bg3);border:1px solid var(--border);border-radius:8px;overflow:hidden}.pre-card img{width:100%;display:block}.pre-card div{padding:6px;font-size:10px;text-align:center;color:var(--text2)}.small-btn{margin-top:8px;width:100%;padding:10px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--accent);font-weight:800}.hidden{display:none!important}@media(max-width:420px){.riskbox{grid-template-columns:1fr}.risk-circle{margin:0 auto}.zone-grid{grid-template-columns:1fr}.pre-grid{grid-template-columns:1fr}}
+body{
+background:#07111d;
+color:white;
+font-family:Arial,sans-serif;
+padding:20px;
+max-width:700px;
+margin:auto;
+}
+.card{
+background:#0d1b2a;
+border:1px solid #13324f;
+padding:20px;
+border-radius:16px;
+margin-bottom:20px;
+}
+input,textarea{
+width:100%;
+padding:14px;
+border-radius:12px;
+border:1px solid #1d4d77;
+background:#081521;
+color:white;
+font-size:16px;
+margin-top:10px;
+box-sizing:border-box;
+}
+button{
+width:100%;
+padding:16px;
+border:none;
+border-radius:14px;
+background:#00c8f0;
+color:white;
+font-size:18px;
+font-weight:bold;
+margin-top:15px;
+cursor:pointer;
+}
+img{
+max-width:100%;
+border-radius:12px;
+margin-top:15px;
+}
+.result{
+margin-top:20px;
+padding:15px;
+border-radius:12px;
+background:#102235;
+line-height:1.7;
+white-space:pre-wrap;
+}
+.err{
+background:#3a0f17;
+border:1px solid #ff3355;
+}
+.ok{
+background:#0f3321;
+border:1px solid #00d084;
+}
 </style>
 </head>
 <body>
-<div class="hdr"><div class="hdr-row"><div class="hdr-icon">📦</div><div><div class="hdr-title">X-Ray Cargo Inspector V8 Pro</div><div class="hdr-sub">AI + Enhanced X-ray + Risk Scoring · Hải quan</div></div><div class="free-badge">V8 PRO</div></div></div>
-<div class="wrap">
-  <div class="steps"><div class="step active" id="s1">SETUP</div><div class="step" id="s2">MANIFEST</div><div class="step" id="s3">ẢNH SOI</div><div class="step" id="s4">KẾT QUẢ</div></div>
-  <div class="card" id="setup-card"><div class="card-hd"><div class="cnum">0</div>Cài đặt Gemini API</div><div id="key-status"></div><div class="setup-row"><input class="setup-inp" type="password" id="api-inp" placeholder="AIza..." autocomplete="off" autocorrect="off" spellcheck="false"><button class="setup-btn" onclick="saveKey()">Lưu key</button></div><div class="setup-tip">Lấy API key tại <a href="https://aistudio.google.com" target="_blank">aistudio.google.com</a> → Get API Key → Create API Key. Key lưu trên máy của bạn bằng localStorage.</div></div>
-  <div class="card"><div class="card-hd"><div class="cnum">1</div>Thông tin Manifest / Tờ khai</div><textarea id="manifest" rows="5" placeholder="Nhập thông tin khai báo: tên hàng, HS, số lượng, trọng lượng, xuất xứ, hãng tàu, nơi đến..."></textarea><div class="qrow"><div class="qbtn" onclick="qfill('machinery')">Máy móc</div><div class="qbtn" onclick="qfill('textile')">Dệt may</div><div class="qbtn" onclick="qfill('chemical')">Hóa chất</div><div class="qbtn" onclick="qfill('electronics')">Điện tử</div><div class="qbtn" onclick="qfill('food')">Thực phẩm</div><div class="qbtn" onclick="qfill('ceramic')">Gốm sứ</div><div class="qbtn" onclick="qfill('plastic')">Nhựa</div></div><div class="tip"><b>V8 Pro:</b> AI sẽ đối chiếu hình dạng, mật độ, vùng bất thường và mức phù hợp manifest.</div></div>
-  <div class="card"><div class="card-hd"><div class="cnum">2</div>Upload ảnh X-ray soi chiếu</div><div class="upload-zone" id="uz"><input type="file" id="file-inp" accept="image/*" onchange="handleFile(this)"><div class="upload-icon">📷</div><div class="upload-main">Chọn ảnh X-ray</div><div class="upload-sub">JPG · PNG · ảnh chụp màn hình máy soi</div><div class="upload-tip">Ảnh sẽ được xử lý tăng tương phản bằng Canvas trước khi gửi AI.</div></div><div class="img-preview" id="img-preview"><div class="img-wrap"><img id="pimg" src="" alt="X-ray"></div><div class="fname" id="fname"></div><div class="lut-bar"><div class="lbtn on" onclick="lut(this,'none')">Gốc</div><div class="lbtn" onclick="lut(this,'invert')">Đảo màu</div><div class="lbtn" onclick="lut(this,'contrast')">Tương phản</div><div class="lbtn" onclick="lut(this,'bright')">Sáng hơn</div><div class="lbtn" onclick="lut(this,'edge')">Viền</div><div class="lbtn" onclick="lut(this,'heatmap')">Heatmap</div></div><button class="small-btn" onclick="togglePreviews()">Xem ảnh đã tăng cường AI</button><div id="previews" class="pre-grid hidden"></div></div></div>
-  <button class="btn-go" id="go-btn" onclick="analyze()" disabled>Phân tích ảnh X-ray V8 Pro</button>
-  <div class="loading" id="loading"><div class="spin"></div><div class="load-txt">AI đang phân tích ảnh...</div><div class="load-step" id="lstep">Tăng tương phản ảnh X-ray...</div></div>
-  <div id="results"><div id="vbox" class="verdict v-caution"><div class="v-title" id="vtitle">ĐANG ĐÁNH GIÁ</div><div class="v-sub" id="vsub"></div></div>
-    <div class="ai-block"><div class="ai-hd"><span>📊</span><span>Risk Scoring</span><span class="ai-hd-badge">V8</span></div><div class="ai-body"><div class="riskbox"><div><div class="risk-circle" id="risk-circle"><div><div class="risk-num" id="risk-num">--</div><div class="risk-lbl">RISK</div></div></div></div><div class="risk-bars" id="risk-bars"></div></div></div></div>
-    <div class="ai-block"><div class="ai-hd"><span>🧭</span><span>Phân tích vùng container</span></div><div class="ai-body"><div class="zone-grid" id="zone-grid"></div></div></div>
-    <div class="ai-block"><div class="ai-hd"><span>🔍</span><span>Nhận diện vật thể</span><span class="ai-hd-badge">GEMINI VISION</span></div><div class="ai-body"><div id="obj-list"></div></div></div>
-    <div class="ai-block"><div class="ai-hd"><span>📋</span><span>Đối chiếu Manifest</span></div><div class="ai-body"><div class="cmp-table" id="cmp-table"></div></div></div>
-    <div class="ai-block"><div class="ai-hd"><span>❓</span><span>Điểm cần đối chiếu kiểm tra</span><span class="ai-hd-badge">NGHIỆP VỤ</span></div><div class="ai-body"><div id="checklist"></div></div></div>
-    <div class="ai-block"><div class="ai-hd"><span>📄</span><span>Phân tích toàn văn</span></div><div class="ai-body"><div class="full-text" id="full-text"></div></div></div>
-    <div class="ann-block"><div class="ann-hd">📝 Ghi chú và quyết định cán bộ</div><div class="ann-body"><textarea class="ann-note" id="note" placeholder="Ghi chú: nhận xét hàng hóa, điểm bất thường, lý do quyết định..."></textarea><div class="dec-btns"><button class="dbtn d-clear" onclick="decide('CLEAR')">THÔNG QUAN</button><button class="dbtn d-hold" onclick="decide('HOLD')">GIỮ / KIỂM TRA</button></div><div class="dec-result" id="dec-result"></div></div></div>
-  </div>
+
+<h1>📦 X-Ray Cargo Inspector V8 Pro FIXED</h1>
+
+<div class="card">
+<h3>Gemini API Key</h3>
+<input id="apiKey" placeholder="AIza..." type="password">
+<button onclick="saveKey()">Lưu API Key</button>
 </div>
+
+<div class="card">
+<h3>Manifest / Tờ khai</h3>
+<textarea id="manifest" rows="5" placeholder="Nhập thông tin manifest"></textarea>
+</div>
+
+<div class="card">
+<h3>Ảnh X-Ray</h3>
+<input type="file" accept="image/*" id="fileInput">
+<img id="preview" style="display:none;">
+<button onclick="analyze()">Phân tích ảnh X-ray</button>
+</div>
+
+<div id="result"></div>
+
 <script>
-let b64=null,mime='image/jpeg',originalDataUrl='',enhanced={};
-const $=id=>document.getElementById(id);
-function saveKey(){const k=$('api-inp').value.trim();if(!k.startsWith('AIza')){alert('Key không hợp lệ. Key Gemini thường bắt đầu bằng AIza...');return}localStorage.setItem('gemini_key',k);showKeyStatus(true);checkReady()}
-function getKey(){return localStorage.getItem('gemini_key')||''}
-function showKeyStatus(saved){if(saved){$('key-status').innerHTML='<div class="key-saved">✅ Đã lưu API key Gemini · Sẵn sàng sử dụng</div>';$('key-status').style.marginBottom='10px'}}
-window.addEventListener('DOMContentLoaded',()=>{const k=getKey();if(k){$('api-inp').value=k;showKeyStatus(true)}checkReady()});
-const tpls={machinery:'01 UNIT EXCAVATOR PC200-8M0\nHS CODE: 8429.52.00\nWEIGHT: 18,500 KGS\nORIGIN: JAPAN\nBrand: Komatsu, Year: 2022',textile:'500 CARTONS GARMENT (SHIRTS & PANTS)\nHS CODE: 6205.20.00 / 6203.42.00\nWEIGHT: 8,500 KGS · 15,000 PCS\nMADE IN VIETNAM · DESTINATION: EU',chemical:'20 DRUMS PAINT WATER-BASED\nHS CODE: 3209.10.00\n200KG/DRUM · TOTAL: 4,000 KGS\nUN: N/A · NON-HAZARDOUS · ORIGIN: CHINA',electronics:'100 CTNS LAPTOP COMPUTER\nHS CODE: 8471.30.10\n500 UNITS · 2,500 KGS\nBRAND: ASUS · MADE IN CHINA',food:'1,000 BAGS JASMINE RICE\nHS CODE: 1006.30.10\n50KGS/BAG · TOTAL: 50,000 KGS\nVIETNAM ORIGIN · CERT: VSATP-2024',ceramic:'200 CTNS CERAMIC FLOOR TILES 60x60CM\nHS CODE: 6907.21.00\nWEIGHT: 8,000 KGS · MADE IN CHINA',plastic:'300 CTNS PLASTIC HOUSEHOLD ITEMS\nHS CODE: 3924.10.00\nWEIGHT: 6,000 KGS · MADE IN CHINA'};
-function qfill(t){$('manifest').value=tpls[t]||'';setStep(2)}
-function handleFile(inp){const f=inp.files[0];if(!f)return;mime=f.type||'image/jpeg';const r=new FileReader();r.onload=async e=>{originalDataUrl=e.target.result;b64=originalDataUrl.split(',')[1];$('pimg').src=originalDataUrl;$('fname').textContent=f.name;$('img-preview').style.display='block';setStep(3);checkReady();$('results').style.display='none';$('dec-result').style.display='none';await buildEnhancedImages(originalDataUrl)};r.readAsDataURL(f)}
-function lut(btn,mode){document.querySelectorAll('.lbtn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');const f={none:'none',invert:'invert(100%)',contrast:'contrast(210%) brightness(112%)',bright:'brightness(170%) contrast(120%)',edge:'contrast(420%) brightness(75%) saturate(0%)',heatmap:'sepia(100%) saturate(400%) hue-rotate(300deg) contrast(150%)'};$('pimg').style.filter=f[mode]||'none'}
-function checkReady(){$('go-btn').disabled=!(b64&&getKey())}function setStep(n){['s1','s2','s3','s4'].forEach((id,i)=>$(id).className='step'+(i+1<n?' done':i+1===n?' active':''))}
-function togglePreviews(){$('previews').classList.toggle('hidden')}
-async function buildEnhancedImages(src){enhanced={};const img=await loadImg(src);enhanced.contrast=canvasProcess(img,'contrast');enhanced.edge=canvasProcess(img,'edge');enhanced.density=canvasProcess(img,'density');const pv=$('previews');pv.innerHTML=`<div class="pre-card"><img src="${enhanced.contrast}"><div>AI Contrast</div></div><div class="pre-card"><img src="${enhanced.edge}"><div>Edge Map</div></div><div class="pre-card"><img src="${enhanced.density}"><div>Density Map</div></div>`}
-function loadImg(src){return new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=rej;im.src=src})}
-function canvasProcess(img,mode){let max=1280,scale=Math.min(1,max/Math.max(img.width,img.height));let w=Math.round(img.width*scale),h=Math.round(img.height*scale);const c=document.createElement('canvas'),ctx=c.getContext('2d',{willReadFrequently:true});c.width=w;c.height=h;ctx.drawImage(img,0,0,w,h);let d=ctx.getImageData(0,0,w,h),p=d.data;for(let i=0;i<p.length;i+=4){let r=p[i],g=p[i+1],b=p[i+2];let y=.299*r+.587*g+.114*b;if(mode==='contrast'){let v=Math.max(0,Math.min(255,(y-128)*1.85+128));p[i]=p[i+1]=p[i+2]=v}else if(mode==='density'){let v=255-y;v=Math.max(0,Math.min(255,(v-100)*2+120));p[i]=v;p[i+1]=Math.min(255,v*1.08);p[i+2]=Math.max(0,255-v)}else if(mode==='edge'){let v=y>128?230:35;p[i]=p[i+1]=p[i+2]=v}}ctx.putImageData(d,0,0);if(mode==='edge'){ctx.globalAlpha=.55;ctx.filter='contrast(250%)';ctx.drawImage(c,0,0)}return c.toDataURL('image/jpeg',.86)}
-async function analyze(){const key=getKey(),manifest=$('manifest').value.trim();if(!key||!b64)return;setStep(3);$('loading').classList.add('on');$('results').style.display='none';$('go-btn').disabled=true;const lsteps=['Tăng tương phản ảnh X-ray...','Tách vùng container 3x3...','Đọc mật độ và cấu trúc vật thể...','Đối chiếu manifest...','Chấm điểm rủi ro nghiệp vụ...'];let si=0;const timer=setInterval(()=>{$('lstep').textContent=lsteps[si++%lsteps.length]},1400);try{const text=await callGemini(key,manifest);clearInterval(timer);renderResults(text,manifest);$('loading').classList.remove('on');$('results').style.display='block';setStep(4);setTimeout(()=>$('results').scrollIntoView({behavior:'smooth'}),100)}catch(e){clearInterval(timer);$('loading').classList.remove('on');$('results').style.display='block';renderError(e.message)}$('go-btn').disabled=false}
-function cleanJson(s){let t=s.trim();t=t.replace(/^```json/i,'').replace(/^```/,'').replace(/```$/,'').trim();const a=t.indexOf('{'),b=t.lastIndexOf('}');if(a>=0&&b>a)t=t.slice(a,b+1);return t}
-async function callGemini(key,manifest){const mText=manifest?`THÔNG TIN MANIFEST / TỜ KHAI:\n${manifest}`:'Chưa có thông tin manifest.';const prompt=`Bạn là chuyên gia phân tích ảnh X-ray container và hỗ trợ nghiệp vụ Hải quan Việt Nam.\n\n${mText}\n\nTôi gửi 4 ảnh: ảnh gốc, ảnh tăng tương phản, ảnh edge map, ảnh density map. Hãy phân tích theo tư duy soi chiếu container.\n\nYÊU CẦU PHÂN TÍCH:\n1) Nhận diện vật thể chính, hình dạng, vị trí, cấu trúc, mật độ tương đối.\n2) Chia container thành 9 vùng: top-left, top-center, top-right, mid-left, mid-center, mid-right, bottom-left, bottom-center, bottom-right.\n3) Đối chiếu manifest: phù hợp/không phù hợp/chưa đủ dữ liệu, nêu lý do.\n4) Phát hiện bất thường: khối đặc bất thường, khoang rỗng, vách giả, hàng lẫn, vật thể nhỏ mật độ cao, che chắn, cấu trúc không đồng nhất.\n5) Chấm điểm rủi ro 0-100.\n\nQUAN TRỌNG: Không được khẳng định tuyệt đối. Đây là hỗ trợ nghiệp vụ, quyết định cuối do cán bộ.\n\nTrả về DUY NHẤT JSON hợp lệ theo schema sau, không thêm markdown:\n{\n  "verdict":"CLEAR|CAUTION|HOLD",\n  "risk_score":0,\n  "summary":"một câu kết luận",\n  "risk_factors":{"manifest_match":0,"density_anomaly":0,"shape_anomaly":0,"concealment_suspect":0},\n  "objects":[{"text":"mô tả vật thể","level":"ok|warn|bad"}],\n  "zones":{"top-left":"...","top-center":"...","top-right":"...","mid-left":"...","mid-center":"...","mid-right":"...","bottom-left":"...","bottom-center":"...","bottom-right":"..."},\n  "manifest_compare":{"declared":"...","image_observed":"...","match_level":"phù hợp|cần đối chiếu|không phù hợp","reason":"..."},\n  "checklist":[{"text":"điểm cần kiểm tra","priority":"cao|trung bình|thấp"}],\n  "full_analysis":"phân tích nghiệp vụ ngắn gọn bằng tiếng Việt"\n}`;const parts=[{inline_data:{mime_type:mime,data:b64}},{inline_data:{mime_type:'image/jpeg',data:(enhanced.contrast||originalDataUrl).split(',')[1]}},{inline_data:{mime_type:'image/jpeg',data:(enhanced.edge||originalDataUrl).split(',')[1]}},{inline_data:{mime_type:'image/jpeg',data:(enhanced.density||originalDataUrl).split(',')[1]}},{text:prompt}];const res=await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts}],generationConfig:{maxOutputTokens:2600,temperature:.18,responseMimeType:'application/json'}})});if(!res.ok){const err=await res.json().catch(()=>({}));throw new Error(err.error?.message||`Lỗi ${res.status}`)}const data=await res.json();return data.candidates?.[0]?.content?.parts?.[0]?.text||'{}'}
-function renderResults(text,manifest){let data=null;try{data=JSON.parse(cleanJson(text))}catch(e){data=fallbackParse(text)}const risk=Number(data.risk_score||50);const verdict=(data.verdict||'CAUTION').toUpperCase();const vb=$('vbox'),vt=$('vtitle'),vs=$('vsub');if(verdict==='HOLD'||risk>=70){vb.className='verdict v-hold';vt.textContent='🔴 GIỮ LẠI — CẦN KIỂM TRA THỰC TẾ'}else if(verdict==='CLEAR'&&risk<40){vb.className='verdict v-clear';vt.textContent='🟢 ẢNH TƯƠNG ĐỐI PHÙ HỢP MANIFEST'}else{vb.className='verdict v-caution';vt.textContent='🟡 CẦN ĐỐI CHIẾU THÊM'}vs.textContent=data.summary||'Kết quả chỉ có giá trị hỗ trợ, cán bộ cần đối chiếu hồ sơ và thực tế.';renderRisk(data);renderZones(data.zones||{});renderObjects(data.objects||[]);renderCompare(data,manifest);renderChecklist(data.checklist||[]);$('full-text').innerHTML=esc(data.full_analysis||text).replace(/\n/g,'<br>')}
-function renderRisk(data){const r=Math.max(0,Math.min(100,Number(data.risk_score||50)));const deg=r*3.6;const color=r>=70?'var(--red)':r>=40?'var(--orange)':'var(--green)';$('risk-num').textContent=r;$('risk-circle').style.background=`conic-gradient(${color} 0deg,${color} ${deg}deg,rgba(255,255,255,.07) ${deg}deg)`;const f=data.risk_factors||{};const rows=[['Phù hợp TK',100-(f.manifest_match??50)],['Mật độ lạ',f.density_anomaly??0],['Hình dạng lạ',f.shape_anomaly??0],['Che giấu',f.concealment_suspect??0]];$('risk-bars').innerHTML=rows.map(([k,v])=>`<div class="bar-row"><span>${k}</span><div class="bar"><i style="width:${Math.max(0,Math.min(100,v))}%;background:${v>=70?'var(--red)':v>=40?'var(--orange)':'var(--accent)'}"></i></div><b>${v}</b></div>`).join('')}
-function renderZones(z){const names=['top-left','top-center','top-right','mid-left','mid-center','mid-right','bottom-left','bottom-center','bottom-right'];$('zone-grid').innerHTML=names.map(n=>`<div class="zone"><div class="zone-title">${n}</div><div class="zone-text">${esc(z[n]||'Chưa rõ')}</div></div>`).join('')}
-function renderObjects(items){if(!items.length)items=[{text:'Chưa tách được danh sách vật thể rõ ràng. Xem phân tích toàn văn.',level:'warn'}];$('obj-list').innerHTML=items.slice(0,8).map(o=>{const lvl=o.level||'warn';const cls=lvl==='bad'?'dot-bad':lvl==='ok'?'dot-ok':'dot-warn';const tag=lvl==='bad'?'Cần kiểm tra':lvl==='ok'?'Bình thường':'Lưu ý';const tc=lvl==='bad'?'tag-bad':lvl==='ok'?'tag-ok':'tag-warn';return `<div class="obj-item"><div class="obj-dot ${cls}"></div><div class="obj-text">${esc(o.text||o)}<br><span class="obj-tag ${tc}">${tag}</span></div></div>`}).join('')}
-function renderCompare(data,manifest){const c=data.manifest_compare||{};$('cmp-table').innerHTML=`<div class="cmp-row"><div class="cmp-lbl">Hàng khai báo</div><div class="cmp-val neutral">${esc(c.declared||manifest.split('\n')[0]||'Chưa nhập')}</div></div><div class="cmp-row"><div class="cmp-lbl">Ảnh nhận dạng</div><div class="cmp-val neutral">${esc(c.image_observed||'Chưa rõ')}</div></div><div class="cmp-row"><div class="cmp-lbl">Mức phù hợp</div><div class="cmp-val ${/không/i.test(c.match_level||'')?'mismatch':/phù hợp/i.test(c.match_level||'')?'match':'neutral'}">${esc(c.match_level||'Cần đối chiếu')}</div></div><div class="cmp-row"><div class="cmp-lbl">Lý do</div><div class="cmp-val neutral">${esc(c.reason||'Cần xem phân tích toàn văn')}</div></div>`}
-function renderChecklist(items){if(!items.length)items=[{text:'Đối chiếu hồ sơ, manifest, trọng lượng và kiểm tra thực tế nếu có nghi vấn.',priority:'trung bình'}];$('checklist').innerHTML=items.slice(0,9).map(x=>{const p=(x.priority||'trung bình').toLowerCase();const cls=p.includes('cao')?'chk-high':p.includes('thấp')?'chk-low':'chk-mid';const icon=p.includes('cao')?'❗':p.includes('thấp')?'📌':'⚠️';return `<div class="chk-item ${cls}"><div class="chk-icon">${icon}</div><div>${esc(x.text||x)}</div></div>`}).join('')}
-function fallbackParse(text){return{verdict:/giữ|kiểm tra|không phù hợp/i.test(text)?'HOLD':'CAUTION',risk_score:/giữ|kiểm tra|không phù hợp/i.test(text)?75:50,summary:'AI trả về dạng văn bản, chưa đúng JSON. Vẫn hiển thị phân tích toàn văn.',objects:[],zones:{},manifest_compare:{},checklist:[],full_analysis:text}}
-function renderError(msg){$('results').innerHTML=/401|api.?key|invalid/i.test(msg)?`<div class="err-box"><b>Lỗi API Key:</b> Key không hợp lệ. Tạo key mới tại aistudio.google.com rồi nhập lại.</div>`:/429/.test(msg)?`<div class="err-box"><b>Quá giới hạn:</b> Chờ một lúc rồi thử lại.</div>`:`<div class="err-box"><b>Lỗi kết nối:</b> ${esc(msg)}<br><br>Kiểm tra mạng, API key hoặc model Gemini.</div>`}
-function decide(d){const dr=$('dec-result'),time=new Date().toLocaleString('vi-VN');if(d==='CLEAR'){dr.className='dec-result dr-clear';dr.innerHTML=`✅ THÔNG QUAN<br><small style="font-size:11px;opacity:.7">${time}</small>`}else{dr.className='dec-result dr-hold';dr.innerHTML=`🔴 GIỮ — KIỂM TRA THỰC TẾ<br><small style="font-size:11px;opacity:.7">${time}</small>`}dr.style.display='block';dr.scrollIntoView({behavior:'smooth'})}
-function esc(s){return String(s??'').replace(/[&<>'"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]))}
+let imageBase64 = '';
+
+document.getElementById('fileInput').addEventListener('change', function(e){
+    const file = e.target.files[0];
+    if(!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = function(ev){
+        imageBase64 = ev.target.result.split(',')[1];
+
+        const img = document.getElementById('preview');
+        img.src = ev.target.result;
+        img.style.display = 'block';
+    };
+
+    reader.readAsDataURL(file);
+});
+
+function saveKey(){
+    const key = document.getElementById('apiKey').value.trim();
+
+    localStorage.setItem('gemini_key', key);
+
+    alert('Đã lưu API Key');
+}
+
+async function analyze(){
+
+    const result = document.getElementById('result');
+
+    result.innerHTML = '<div class="result">Đang phân tích...</div>';
+
+    const key = localStorage.getItem('gemini_key');
+
+    if(!key){
+        result.innerHTML = '<div class="result err">Chưa có API key</div>';
+        return;
+    }
+
+    if(!imageBase64){
+        result.innerHTML = '<div class="result err">Chưa chọn ảnh</div>';
+        return;
+    }
+
+    const manifest = document.getElementById('manifest').value;
+
+    try{
+
+        const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${key}`,
+        {
+            method:'POST',
+            headers:{
+                'Content-Type':'application/json'
+            },
+            body:JSON.stringify({
+                contents:[
+                    {
+                        parts:[
+                            {
+                                inline_data:{
+                                    mime_type:'image/jpeg',
+                                    data:imageBase64
+                                }
+                            },
+                            {
+                                text:
+`Bạn là chuyên gia phân tích ảnh soi chiếu container Hải quan Việt Nam.
+
+Manifest:
+${manifest}
+
+Hãy:
+1. Nhận diện vật thể trong ảnh
+2. Đánh giá phù hợp manifest
+3. Nêu điểm nghi vấn
+4. Kết luận thông quan hay giữ kiểm tra
+
+Trả lời tiếng Việt rõ ràng.`
+                            }
+                        ]
+                    }
+                ],
+                generationConfig:{
+                    temperature:0.2,
+                    maxOutputTokens:1200
+                }
+            })
+        });
+
+        const data = await response.json();
+
+        console.log(data);
+
+        if(data.error){
+
+            result.innerHTML =
+            `<div class="result err">
+<b>Lỗi Gemini API</b>
+
+${data.error.message}
+</div>`;
+
+            return;
+        }
+
+        const text =
+        data.candidates?.[0]?.content?.parts?.[0]?.text
+        || 'Không có kết quả';
+
+        result.innerHTML =
+        `<div class="result ok">${text}</div>`;
+
+    }catch(err){
+
+        result.innerHTML =
+        `<div class="result err">
+<b>Lỗi kết nối</b>
+
+${err.message}
+</div>`;
+    }
+}
 </script>
+
 </body>
 </html>
