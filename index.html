@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Container X-Ray AI V15 Pro</title>
+<style>
+:root{
+  --bg:#050b13; --card:#0e1b2b; --border:#1b4167; --input:#071320;
+  --accent:#00aeea; --ok:#00e096; --warn:#ffb020; --err:#ff3b5c; --text:#eef7ff;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:Arial,sans-serif;max-width:960px;margin:auto;padding:12px}
+h1{font-size:22px;margin:10px 0 4px}
+.sub{color:#7fa8c9;font-size:13px;margin-bottom:12px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;margin:12px 0}
+.card h3{margin:0 0 10px;font-size:16px}
+input,textarea,select{width:100%;background:var(--input);color:#fff;border:1px solid #2b5d8c;border-radius:10px;padding:12px;font-size:15px}
+textarea{resize:vertical}
+button{border:0;border-radius:12px;padding:13px;margin-top:10px;background:var(--accent);color:#fff;font-weight:bold;font-size:15px;cursor:pointer;width:100%}
+button:active{opacity:.8}
+button.sec{background:#173a5c}
+button.ok{background:#0a8f5f}
+button.warn{background:#b06400}
+button.half{width:49%}
+.row{display:flex;gap:2%}
+.tabs{display:flex;gap:6px;margin:10px 0;flex-wrap:wrap}
+.tab{flex:1;min-width:80px;text-align:center;padding:10px 4px;border-radius:10px;background:#0a1626;border:1px solid var(--border);cursor:pointer;font-size:13px;font-weight:bold}
+.tab.active{background:var(--accent);border-color:var(--accent)}
+.page{display:none}
+.page.show{display:block}
+.result{white-space:pre-wrap;line-height:1.65;background:#0d1d30;border:1px solid var(--border);border-radius:14px;padding:14px;margin-top:12px;font-size:14px}
+.result.good{background:#0b2d20;border-color:var(--ok)}
+.result.bad{background:#34101a;border-color:var(--err)}
+.result.mid{background:#2d230b;border-color:var(--warn)}
+img,canvas{width:100%;border-radius:12px;border:1px solid var(--border);margin-top:10px;display:block}
+.det{padding:10px;background:var(--input);border:1px solid #214c75;border-radius:10px;margin:6px 0;font-size:13px}
+.slider-row{display:flex;align-items:center;gap:10px;margin:8px 0}
+.slider-row label{width:90px;font-size:13px;color:#9fc3e0}
+.slider-row input[type=range]{flex:1;padding:0}
+.slider-row span{width:36px;text-align:right;font-size:13px}
+.viewbtns{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.viewbtns button{flex:1;min-width:70px;padding:8px 4px;font-size:12px;margin-top:0;background:#173a5c}
+.viewbtns button.active{background:var(--accent)}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:bold;margin-right:6px}
+.badge.g{background:#0a8f5f}.badge.y{background:#b06400}.badge.r{background:#c21f3a}
+.hist-item{padding:10px;background:var(--input);border:1px solid #214c75;border-radius:10px;margin:6px 0;font-size:13px;cursor:pointer}
+.hist-item:hover{border-color:var(--accent)}
+.small{font-size:12px;color:#7fa8c9;margin-top:6px;line-height:1.5}
+.risk-bar{height:14px;background:#0a1626;border-radius:8px;overflow:hidden;margin-top:6px}
+.risk-fill{height:100%;border-radius:8px;transition:width .5s}
+.quick{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.quick button{flex:1;min-width:70px;padding:8px 4px;font-size:12px;margin-top:0;background:#173a5c}
+.stat3{display:flex;gap:8px;text-align:center;margin-top:10px}
+.stat3 div{flex:1;background:var(--input);border:1px solid #214c75;border-radius:10px;padding:10px}
+.stat3 b{display:block;font-size:20px;color:var(--accent)}
+.stat3 span{font-size:11px;color:#7fa8c9}
+</style>
+</head>
+<body>
+
+<h1>📦 Container X-Ray AI V15 Pro</h1>
+<div class="sub">Phân tích nâng cao tại máy: khoanh vùng liền kề · vách đôi/khoang rỗng · đối chiếu HS · so ảnh chuẩn · riêng tư mặc định</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="go(0)">⚙️ Setup</div>
+  <div class="tab" onclick="go(1)">📋 Tờ khai</div>
+  <div class="tab" onclick="go(2)">🖼️ Ảnh soi</div>
+  <div class="tab" onclick="go(3)">📊 Kết quả</div>
+  <div class="tab" onclick="go(4)">🗂️ Lịch sử</div>
+</div>
+
+<!-- ============ TAB 0: SETUP ============ -->
+<div class="page show" id="p0">
+  <div class="card" style="border-color:#00e096">
+    <h3>🔒 Chế độ riêng tư</h3>
+    <label class="slider-row" style="cursor:pointer">
+      <input type="checkbox" id="privacyMode" checked onchange="togglePrivacy()" style="width:22px;height:22px;flex:none">
+      <span style="flex:1;font-size:14px">BẬT = Chỉ phân tích tại máy, <b>ảnh KHÔNG gửi ra ngoài</b> (an toàn cho ảnh nghiệp vụ)</span>
+    </label>
+    <div id="privacyStatus" class="small" style="margin-top:8px"></div>
+  </div>
+  <div class="card">
+    <h3>🔑 AI Provider miễn phí (chỉ cần ít nhất 1 key)</h3>
+    <div class="small" style="margin-bottom:8px">App tự động thử lần lượt: Gemini → Groq → OpenRouter. Provider nào lỗi/hết quota sẽ tự nhảy sang provider kế tiếp.</div>
+    <label class="small"><b>1. Google Gemini</b> — lấy key tại <b>aistudio.google.com</b></label>
+    <input id="apiKey" type="password" placeholder="Gemini API key (AIza...)" style="margin-bottom:10px">
+    <label class="small"><b>2. Groq</b> (khuyên dùng dự phòng) — lấy key tại <b>console.groq.com/keys</b> · miễn phí, rất nhanh</label>
+    <input id="groqKey" type="password" placeholder="Groq API key (gsk_...)" style="margin-bottom:10px">
+    <label class="small"><b>3. OpenRouter</b> — lấy key tại <b>openrouter.ai/keys</b> · ~50 request miễn phí/ngày</label>
+    <input id="orKey" type="password" placeholder="OpenRouter API key (sk-or-...)">
+    <div class="small" style="margin-top:10px;padding:10px;background:#0b2d20;border:1px solid #00e096;border-radius:10px">
+      <b>4. Pollinations AI — KHÔNG CẦN KEY ✅</b><br>
+      Luôn bật sẵn làm phương án cuối. Nếu cả 3 key trên đều lỗi (hoặc chưa có key nào), app tự động dùng Pollinations — miễn phí, không cần đăng ký. Bạn có thể bấm PHÂN TÍCH ngay mà không cần cài gì.
+    </div>
+    <div class="row">
+      <button class="half" onclick="saveKey()">💾 Lưu tất cả key</button>
+      <button class="half sec" onclick="testKey()">🔍 Kiểm tra key</button>
+    </div>
+    <div class="small">
+      Key chỉ lưu trên máy này (localStorage), gửi thẳng tới nhà cung cấp AI, không qua server trung gian nào.
+    </div>
+    <div id="keyStatus"></div>
+  </div>
+  <div class="card">
+    <h3>👤 Thông tin cán bộ (in vào báo cáo)</h3>
+    <input id="officerName" placeholder="Họ tên cán bộ" style="margin-bottom:8px">
+    <input id="officerUnit" placeholder="Đơn vị (VD: Bộ phận máy soi – HQCK CSG KV1)">
+    <button class="sec" onclick="saveOfficer()">💾 Lưu thông tin</button>
+  </div>
+</div>
+
+<!-- ============ TAB 1: MANIFEST ============ -->
+<div class="page" id="p1">
+  <div class="card">
+    <h3>📋 Thông tin lô hàng</h3>
+    <input id="contNo" placeholder="Số container (VD: MSKU1234567)" style="margin-bottom:8px">
+    <input id="declNo" placeholder="Số tờ khai (nếu có)" style="margin-bottom:8px">
+    <textarea id="manifest" rows="5" placeholder="Tên hàng, mã HS, số lượng, trọng lượng, xuất xứ..." oninput="syncManifest(this)"></textarea>
+    <div class="quick">
+      <button onclick="qm('Máy móc thiết bị, linh kiện cơ khí')">Máy móc</button>
+      <button onclick="qm('Xe / phương tiện vận tải, phụ tùng')">Xe cộ</button>
+      <button onclick="qm('Hàng dệt may, vải, quần áo')">Dệt may</button>
+      <button onclick="qm('Hóa chất, dung môi công nghiệp')">Hóa chất</button>
+      <button onclick="qm('Đồ gia dụng, điện tử tiêu dùng')">Gia dụng</button>
+      <button onclick="qm('Nông sản, thực phẩm')">Nông sản</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TAB 2: IMAGE ============ -->
+<div class="page" id="p2">
+  <div class="card">
+    <h3>📋 Manifest / Tờ khai (dán nhanh tại đây)</h3>
+    <textarea id="manifest2" rows="3" placeholder="Tên hàng, mã HS, số lượng, trọng lượng, xuất xứ... (đồng bộ với tab Tờ khai)" oninput="syncManifest(this)"></textarea>
+  </div>
+  <div class="card">
+    <h3>🖼️ Ảnh X-Ray + tăng cường tại máy</h3>
+    <input id="file" type="file" accept="image/*">
+    <div class="viewbtns" id="viewbtns">
+      <button class="active" onclick="setView('orig',this)">Gốc</button>
+      <button onclick="setView('enh',this)">Rõ nét</button>
+      <button onclick="setView('mat',this)">Màu vật liệu</button>
+      <button onclick="setView('edge',this)">Viền</button>
+      <button onclick="setView('heat',this)">Mật độ</button>
+      <button onclick="setView('over',this)">Khoanh vùng</button>
+      <button onclick="setView('inv',this)">Đảo màu</button>
+    </div>
+    <div class="slider-row"><label>Tương phản</label><input type="range" id="sContrast" min="50" max="250" value="125" oninput="applyView()"><span id="vContrast">125</span></div>
+    <div class="slider-row"><label>Độ sáng</label><input type="range" id="sBright" min="50" max="200" value="105" oninput="applyView()"><span id="vBright">105</span></div>
+    <div class="slider-row"><label>Sắc nét</label><input type="range" id="sSharp" min="0" max="100" value="35" oninput="applyView()"><span id="vSharp">35</span></div>
+    <canvas id="cv"></canvas>
+    <div class="row">
+      <button class="half sec" onclick="rotate90()">↻ Xoay 90°</button>
+      <button class="half sec" onclick="downloadEnhanced()">⬇️ Tải ảnh này</button>
+    </div>
+    <button onclick="analyzeAll()">🚀 PHÂN TÍCH V12 (AI + tại máy)</button>
+    <div class="small">💡 AI sẽ nhận đúng khung hình đang xem (đã tăng cường). Nếu không có mạng, hệ thống vẫn chạy phân tích tại máy.</div>
+  </div>
+</div>
+
+<!-- ============ TAB 3: RESULTS ============ -->
+<div class="page" id="p3">
+  <div class="card">
+    <h3>🔬 Phân tích kỹ thuật tại máy</h3>
+    <div class="stat3">
+      <div><b id="stContrast">–</b><span>Tương phản</span></div>
+      <div><b id="stDark">–</b><span>Vùng đậm %</span></div>
+      <div><b id="stEdge">–</b><span>Viền vật thể</span></div>
+    </div>
+    <div style="margin-top:10px;font-size:13px">Risk score (tại máy): <b id="riskNum">0</b>/100</div>
+    <div class="risk-bar"><div class="risk-fill" id="riskFill" style="width:0%;background:var(--ok)"></div></div>
+    <div id="localDetections"></div>
+  </div>
+  <div class="card">
+    <h3>📐 So sánh ảnh chuẩn (baseline theo loại hàng)</h3>
+    <div class="small" style="margin-bottom:8px">Lưu 1 ảnh container "bình thường" cho mỗi loại hàng, hệ thống so sánh độ lệch để phát hiện bất thường. Ảnh chuẩn lưu trên máy này.</div>
+    <input id="baselineType" placeholder="Tên loại hàng chuẩn (VD: Dệt may, Máy móc...)" style="margin-bottom:8px">
+    <div class="row">
+      <button class="half sec" onclick="saveBaseline()">💾 Lưu ảnh hiện tại làm chuẩn</button>
+      <button class="half" onclick="compareBaseline()">📊 So sánh với chuẩn</button>
+    </div>
+    <div id="baselineOut"></div>
+  </div>
+  <div class="card">
+    <h3>🧠 Kết luận hệ thống</h3>
+    <div id="aiOut"><div class="result">Chưa phân tích.</div></div>
+  </div>
+  <div class="card">
+    <h3>✍️ Quyết định cán bộ</h3>
+    <div class="row">
+      <button class="half ok" onclick="decide('THÔNG QUAN')">✅ THÔNG QUAN</button>
+      <button class="half warn" onclick="decide('GIỮ KIỂM TRA')">🔍 GIỮ KIỂM TRA</button>
+    </div>
+    <textarea id="officerNote" rows="2" placeholder="Ghi chú của cán bộ (tuỳ chọn)" style="margin-top:10px"></textarea>
+    <button class="sec" onclick="copyReport()">📄 Copy báo cáo hoàn chỉnh</button>
+    <div id="decideStatus"></div>
+  </div>
+</div>
+
+<!-- ============ TAB 4: HISTORY ============ -->
+<div class="page" id="p4">
+  <div class="card">
+    <h3>🗂️ Lịch sử phân tích (lưu trên máy)</h3>
+    <div id="histList"></div>
+    <div class="row">
+      <button class="half sec" onclick="exportHistory()">⬇️ Xuất JSON</button>
+      <button class="half" style="background:#c21f3a" onclick="clearHistory()">🗑️ Xóa hết</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   Container X-Ray AI V12 Free — app.js
+   Gemini Free API (key người dùng) + phân tích tại máy (Canvas)
+   ============================================================ */
+
+// ---------- State ----------
+let origImg = null;          // HTMLImageElement gốc
+let rotation = 0;            // 0/90/180/270
+let curView = 'orig';
+let localStats = null;       // kết quả phân tích tại máy
+let lastAI = null;           // text AI trả về
+let lastModel = '';
+let lastDecision = '';
+
+const $ = id => document.getElementById(id);
+
+// ---------- Tabs ----------
+function go(i){
+  document.querySelectorAll('.tab').forEach((t,k)=>t.classList.toggle('active',k===i));
+  document.querySelectorAll('.page').forEach((p,k)=>p.classList.toggle('show',k===i));
+  if(i===4) renderHistory();
+}
+
+// ---------- Init ----------
+window.addEventListener('DOMContentLoaded', ()=>{
+  $('apiKey').value = localStorage.getItem('gm_key')||'';
+  $('groqKey').value = localStorage.getItem('groq_key')||'';
+  $('orKey').value = localStorage.getItem('or_key')||'';
+  $('officerName').value = localStorage.getItem('off_name')||'';
+  $('officerUnit').value = localStorage.getItem('off_unit')||'';
+  // mặc định BẬT riêng tư nếu chưa từng đặt
+  const pv=localStorage.getItem('privacy');
+  $('privacyMode').checked = (pv===null) ? true : (pv==='1');
+  togglePrivacy();
+  $('file').addEventListener('change', loadImage);
+});
+
+function togglePrivacy(){
+  const on=$('privacyMode').checked;
+  localStorage.setItem('privacy',on?'1':'0');
+  const el=$('privacyStatus');
+  if(on) el.innerHTML='<span style="color:#00e096">✅ Đang BẬT: ảnh chỉ xử lý trên máy này. Nút phân tích sẽ chạy tại máy, không gọi AI ngoài.</span>';
+  else el.innerHTML='<span style="color:#ffb020">⚠️ Đang TẮT: ảnh sẽ được gửi tới dịch vụ AI ngoài (Gemini/Groq/OpenRouter/Pollinations) để phân tích. Chỉ tắt với ảnh KHÔNG nhạy cảm.</span>';
+}
+function isPrivacy(){ return localStorage.getItem('privacy')!=='0'; }
+
+// ---------- Setup ----------
+function saveKey(){
+  const g=$('apiKey').value.trim(), q=$('groqKey').value.trim(), o=$('orKey').value.trim();
+  if(!g&&!q&&!o){alert('Cần ít nhất 1 key');return}
+  if(g) localStorage.setItem('gm_key',g); else localStorage.removeItem('gm_key');
+  if(q) localStorage.setItem('groq_key',q); else localStorage.removeItem('groq_key');
+  if(o) localStorage.setItem('or_key',o); else localStorage.removeItem('or_key');
+  localStorage.removeItem('gm_models'); // reset cache model
+  const list=[g&&'Gemini',q&&'Groq',o&&'OpenRouter'].filter(Boolean).join(' + ');
+  $('keyStatus').innerHTML='<div class="result good">✅ Đã lưu key: '+list+'</div>';
+}
+
+async function testKey(){
+  const g=$('apiKey').value.trim()||localStorage.getItem('gm_key');
+  const q=$('groqKey').value.trim()||localStorage.getItem('groq_key');
+  const o=$('orKey').value.trim()||localStorage.getItem('or_key');
+  if(!g&&!q&&!o){$('keyStatus').innerHTML='<div class="result bad">Chưa có key nào.</div>';return}
+  $('keyStatus').innerHTML='<div class="result">Đang kiểm tra các provider...</div>';
+  const lines=[];
+  // Gemini
+  if(g){
+    try{
+      const r=await fetchT('https://generativelanguage.googleapis.com/v1beta/models?key='+encodeURIComponent(g));
+      const d=await r.json();
+      if(d.error) lines.push('❌ Gemini: '+d.error.message.slice(0,90));
+      else{
+        const models=(d.models||[]).filter(m=>(m.supportedGenerationMethods||[]).includes('generateContent')).map(m=>m.name.replace('models/',''));
+        localStorage.setItem('gm_models',JSON.stringify(models));
+        localStorage.setItem('gm_models_at',Date.now());
+        const top=buildModelQueue(models).slice(0,3);
+        lines.push('✅ Gemini: key hợp lệ ('+models.length+' model). Sẽ ưu tiên: '+top.join(', '));
+      }
+    }catch(e){lines.push('❌ Gemini: lỗi mạng '+e.message.slice(0,60))}
+  } else lines.push('⚪ Gemini: chưa có key');
+  // Groq
+  if(q){
+    try{
+      const r=await fetchT('https://api.groq.com/openai/v1/models',{headers:{Authorization:'Bearer '+q}});
+      const d=await r.json();
+      if(d.error) lines.push('❌ Groq: '+(d.error.message||'').slice(0,90));
+      else lines.push('✅ Groq: key hợp lệ ('+(d.data||[]).length+' model)');
+    }catch(e){lines.push('❌ Groq: lỗi mạng '+e.message.slice(0,60))}
+  } else lines.push('⚪ Groq: chưa có key');
+  // OpenRouter
+  if(o){
+    try{
+      const r=await fetchT('https://openrouter.ai/api/v1/key',{headers:{Authorization:'Bearer '+o}});
+      const d=await r.json();
+      if(d.error) lines.push('❌ OpenRouter: '+(d.error.message||JSON.stringify(d.error)).slice(0,90));
+      else lines.push('✅ OpenRouter: key hợp lệ');
+    }catch(e){lines.push('❌ OpenRouter: lỗi mạng '+e.message.slice(0,60))}
+  } else lines.push('⚪ OpenRouter: chưa có key');
+  $('keyStatus').innerHTML='<div class="result">'+lines.join('\n')+'</div>';
+}
+function saveOfficer(){
+  localStorage.setItem('off_name',$('officerName').value.trim());
+  localStorage.setItem('off_unit',$('officerUnit').value.trim());
+  alert('Đã lưu thông tin cán bộ');
+}
+function qm(t){ $('manifest').value=t; $('manifest2').value=t; }
+function syncManifest(src){
+  // đồng bộ 2 chiều giữa ô manifest tab Tờ khai và tab Ảnh soi
+  const v=src.value;
+  if(src.id==='manifest') $('manifest2').value=v;
+  else $('manifest').value=v;
+}
+function getManifest(){ return ($('manifest').value||$('manifest2').value||'').trim(); }
+
+// ---------- Image loading ----------
+function loadImage(e){
+  const f=e.target.files[0]; if(!f) return;
+  const img=new Image();
+  img.onload=()=>{ origImg=img; rotation=0; curView='orig'; applyView(); go(2); };
+  img.src=URL.createObjectURL(f);
+}
+function rotate90(){ if(!origImg) return; rotation=(rotation+90)%360; applyView(); }
+
+function setView(v,btn){
+  curView=v;
+  document.querySelectorAll('#viewbtns button').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  applyView();
+}
+
+// ---------- Core render pipeline ----------
+function baseCanvas(){
+  // vẽ ảnh gốc theo rotation + chỉnh contrast/bright bằng filter
+  const c=document.createElement('canvas'), ctx=c.getContext('2d');
+  const rot = rotation%180!==0;
+  const maxW = 1400; // giới hạn để nhẹ máy
+  let w=origImg.naturalWidth, h=origImg.naturalHeight;
+  const scale=Math.min(1, maxW/Math.max(w,h));
+  w=Math.round(w*scale); h=Math.round(h*scale);
+  c.width = rot? h : w; c.height = rot? w : h;
+  ctx.save();
+  ctx.translate(c.width/2,c.height/2);
+  ctx.rotate(rotation*Math.PI/180);
+  const ct=$('sContrast').value, br=$('sBright').value;
+  $('vContrast').textContent=ct; $('vBright').textContent=br; $('vSharp').textContent=$('sSharp').value;
+  ctx.filter=`contrast(${ct}%) brightness(${br}%)`;
+  ctx.drawImage(origImg,-w/2,-h/2,w,h);
+  ctx.restore();
+  return c;
+}
+
+function sharpen(c,amount){ // amount 0..100
+  if(amount<=0) return c;
+  const k=amount/100;
+  const w=c.width,h=c.height;
+  const src=c.getContext('2d').getImageData(0,0,w,h);
+  const out=new ImageData(w,h);
+  const s=src.data,o=out.data;
+  const kern=[0,-k,0,-k,1+4*k,-k,0,-k,0];
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+    for(let ch=0;ch<3;ch++){
+      let v=0,ki=0;
+      for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++,ki++){
+        const yy=Math.min(h-1,Math.max(0,y+dy)), xx=Math.min(w-1,Math.max(0,x+dx));
+        v+=s[(yy*w+xx)*4+ch]*kern[ki];
+      }
+      o[(y*w+x)*4+ch]=Math.min(255,Math.max(0,v));
+    }
+    o[(y*w+x)*4+3]=255;
+  }
+  const c2=document.createElement('canvas');c2.width=w;c2.height=h;
+  c2.getContext('2d').putImageData(out,0,0);
+  return c2;
+}
+
+function grayData(c){
+  const w=c.width,h=c.height;
+  const d=c.getContext('2d').getImageData(0,0,w,h).data;
+  const g=new Float32Array(w*h);
+  for(let i=0;i<w*h;i++) g[i]=0.299*d[i*4]+0.587*d[i*4+1]+0.114*d[i*4+2];
+  return {g,w,h};
+}
+
+function sobel(c){
+  const {g,w,h}=grayData(c);
+  const out=document.createElement('canvas');out.width=w;out.height=h;
+  const octx=out.getContext('2d');
+  const img=octx.createImageData(w,h);
+  let edgeCount=0;
+  for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){
+    const i=y*w+x;
+    const gx=-g[i-w-1]-2*g[i-1]-g[i+w-1]+g[i-w+1]+2*g[i+1]+g[i+w+1];
+    const gy=-g[i-w-1]-2*g[i-w]-g[i-w+1]+g[i+w-1]+2*g[i+w]+g[i+w+1];
+    const m=Math.min(255,Math.hypot(gx,gy));
+    if(m>60) edgeCount++;
+    img.data[i*4]=img.data[i*4+1]=img.data[i*4+2]=m;
+    img.data[i*4+3]=255;
+  }
+  octx.putImageData(img,0,0);
+  out._edgeRatio=edgeCount/(w*h);
+  return out;
+}
+
+function materialColor(c){
+  // Giả lập bản đồ vật liệu từ mật độ xám (giống màu máy soi):
+  // sáng (hữu cơ) → cam; trung bình → xanh lá; đậm (kim loại) → xanh dương/đen
+  const {g,w,h}=grayData(c);
+  const out=document.createElement('canvas');out.width=w;out.height=h;
+  const octx=out.getContext('2d');
+  const img=octx.createImageData(w,h);
+  for(let i=0;i<w*h;i++){
+    const v=g[i];
+    let r,gg,b;
+    if(v>190){ r=255;gg=150;b=40 }          // hữu cơ - cam
+    else if(v>120){ r=90;gg=200;b=90 }      // hỗn hợp - xanh lá
+    else if(v>60){ r=40;gg=110;b=230 }      // kim loại nhẹ - xanh dương
+    else { r=10;gg=20;b=60 }                // kim loại đặc - đậm
+    img.data[i*4]=r;img.data[i*4+1]=gg;img.data[i*4+2]=b;img.data[i*4+3]=255;
+  }
+  octx.putImageData(img,0,0);
+  return out;
+}
+
+function heatmap(c){
+  // heatmap mật độ: vùng càng đậm càng đỏ
+  const {g,w,h}=grayData(c);
+  const out=document.createElement('canvas');out.width=w;out.height=h;
+  const octx=out.getContext('2d');
+  const img=octx.createImageData(w,h);
+  for(let i=0;i<w*h;i++){
+    const d=1-g[i]/255; // 0 sáng → 1 đậm
+    img.data[i*4]  = Math.round(255*Math.min(1,d*1.6));
+    img.data[i*4+1]= Math.round(255*Math.max(0,1-Math.abs(d-0.5)*2.2));
+    img.data[i*4+2]= Math.round(255*Math.max(0,1-d*1.6));
+    img.data[i*4+3]=255;
+  }
+  octx.putImageData(img,0,0);
+  return out;
+}
+
+function overlay(c){
+  // vẽ bounding box thật của các khối liền kề (connected components)
+  const {g,w,h}=grayData(c);
+  const out=document.createElement('canvas');out.width=w;out.height=h;
+  const octx=out.getContext('2d');
+  octx.drawImage(c,0,0);
+  const blobs=connectedBlobs(g,w,h);
+  const lw=Math.max(2,Math.round(w/300));
+  octx.font='bold '+Math.max(13,Math.round(w/45))+'px Arial';
+  blobs.forEach((b,i)=>{
+    const [x,y,bw,bh]=b.box;
+    // màu theo mật độ
+    octx.strokeStyle=b.density>200?'#ff3b5c':b.density>150?'#ffb020':'#00aeea';
+    octx.lineWidth=lw;
+    octx.strokeRect(x,y,bw,bh);
+    // nhãn số
+    octx.fillStyle=octx.strokeStyle;
+    const ty=y>20?y-4:y+bh+Math.round(w/40);
+    octx.fillText(String(i+1),x+2,ty);
+  });
+  // đánh dấu vách nghi vấn từ structure
+  if(localStats&&localStats.structure){
+    localStats.structure.notes.forEach(n=>{
+      if(/vách|thành giả|double wall/i.test(n)){
+        const left=/trái/.test(n);
+        octx.strokeStyle='#ff00ff';
+        octx.setLineDash([lw*3,lw*2]);
+        octx.lineWidth=lw*1.5;
+        const bx=left?w*0.03:w*0.91;
+        octx.strokeRect(bx,h*0.05,w*0.06,h*0.9);
+        octx.setLineDash([]);
+      }
+    });
+  }
+  if(!blobs.length){
+    octx.fillStyle='#00e096';
+    octx.fillText('Không có vùng mật độ bất thường',12,Math.max(20,Math.round(w/50)));
+  }
+  return out;
+}
+
+function invert(c){
+  const w=c.width,h=c.height;
+  const out=document.createElement('canvas');out.width=w;out.height=h;
+  const octx=out.getContext('2d');
+  octx.filter='invert(1)';
+  octx.drawImage(c,0,0);
+  return out;
+}
+
+function applyView(){
+  if(!origImg) return;
+  let c=baseCanvas();
+  const sh=+$('sSharp').value;
+  if(['enh','edge','mat'].includes(curView)&&sh>0) c=sharpen(c,sh);
+  let show=c;
+  if(curView==='edge') show=sobel(c);
+  else if(curView==='mat') show=materialColor(c);
+  else if(curView==='heat') show=heatmap(c);
+  else if(curView==='over') show=overlay(c);
+  else if(curView==='inv') show=invert(c);
+  const cv=$('cv');
+  cv.width=show.width;cv.height=show.height;
+  cv.getContext('2d').drawImage(show,0,0);
+}
+
+function downloadEnhanced(){
+  if(!origImg){alert('Chưa có ảnh');return}
+  const a=document.createElement('a');
+  a.download='xray_'+curView+'_'+Date.now()+'.jpg';
+  a.href=$('cv').toDataURL('image/jpeg',0.92);
+  a.click();
+}
+
+// ---- So sánh ảnh chuẩn (baseline theo loại hàng) ----
+function imageSignature(){
+  const c=baseCanvas();
+  const {g,w,h}=grayData(c);
+  const hist=new Array(16).fill(0);
+  for(let i=0;i<w*h;i++) hist[Math.min(15,Math.floor(g[i]/16))]++;
+  for(let i=0;i<16;i++) hist[i]=+(hist[i]/(w*h)).toFixed(4);
+  const cols=new Array(32).fill(0);
+  for(let x=0;x<w;x++){let s=0;for(let y=0;y<h;y++)s+=255-g[y*w+x];const bi=Math.min(31,Math.floor(x/w*32));cols[bi]+=s/h;}
+  const cn=w/32;
+  for(let i=0;i<32;i++) cols[i]=+(cols[i]/cn).toFixed(1);
+  let darkPct=0; for(let i=0;i<w*h;i++) if(g[i]<55) darkPct++;
+  return {hist,cols,darkPct:+(100*darkPct/(w*h)).toFixed(1)};
+}
+
+function saveBaseline(){
+  if(!origImg){alert('Chưa có ảnh');return}
+  const type=$('baselineType').value.trim();
+  if(!type){alert('Nhập tên loại hàng chuẩn trước');return}
+  let bl={};
+  try{bl=JSON.parse(localStorage.getItem('baselines')||'{}')}catch(e){}
+  bl[type]=imageSignature();
+  localStorage.setItem('baselines',JSON.stringify(bl));
+  $('baselineOut').innerHTML='<div class="result good">✅ Đã lưu ảnh chuẩn cho loại: "'+type+'". Lần sau chọn ảnh cùng loại rồi bấm "So sánh với chuẩn".</div>';
+}
+
+function compareBaseline(){
+  if(!origImg){alert('Chưa có ảnh');return}
+  const type=$('baselineType').value.trim();
+  let bl={};
+  try{bl=JSON.parse(localStorage.getItem('baselines')||'{}')}catch(e){}
+  const keys=Object.keys(bl);
+  if(!keys.length){$('baselineOut').innerHTML='<div class="result mid">Chưa có ảnh chuẩn nào. Lưu 1 ảnh bình thường làm chuẩn trước.</div>';return}
+  const ref=bl[type]||bl[keys[0]];
+  const refType=bl[type]?type:keys[0];
+  const cur=imageSignature();
+  let histDist=0; for(let i=0;i<16;i++) histDist+=Math.abs(cur.hist[i]-ref.hist[i]);
+  histDist=+(histDist*100).toFixed(1);
+  let colDist=0,refMax=Math.max(...ref.cols,1);
+  for(let i=0;i<32;i++) colDist+=Math.abs(cur.cols[i]-ref.cols[i]);
+  colDist=+(colDist/32/refMax*100).toFixed(1);
+  const darkDiff=+(cur.darkPct-ref.darkPct).toFixed(1);
+  const colDev=ref.cols.map((v,i)=>({i,d:Math.abs(cur.cols[i]-v)})).sort((a,b)=>b.d-a.d).slice(0,3);
+  const zones=colDev.map(o=>o.i<11?'trái':o.i<22?'giữa':'phải');
+  const level = histDist>25||colDist>30||Math.abs(darkDiff)>15 ? 'cao' : histDist>12||colDist>15||Math.abs(darkDiff)>7 ? 'trung bình' : 'thấp';
+  const cls = level==='cao'?'bad':level==='trung bình'?'mid':'good';
+  let msg='<div class="result '+cls+'"><b>So sánh với ảnh chuẩn "'+refType+'":</b>\n';
+  msg+='• Độ lệch phân bố mật độ: '+histDist+'%\n';
+  msg+='• Độ lệch hình dạng xếp hàng: '+colDist+'%\n';
+  msg+='• Chênh lệch vùng đậm: '+(darkDiff>0?'+':'')+darkDiff+'% ('+(darkDiff>0?'nhiều kim loại hơn chuẩn':'ít kim loại hơn chuẩn')+')\n';
+  msg+='• Vị trí lệch nhiều nhất: '+[...new Set(zones)].join(', ')+'\n\n';
+  msg+='<b>Mức độ bất thường so với chuẩn: '+level.toUpperCase()+'</b>';
+  if(level==='cao') msg+='\n⚠️ Ảnh khác biệt rõ so với hàng cùng loại thông thường — soi kỹ vùng lệch.';
+  msg+='</div>';
+  $('baselineOut').innerHTML=msg;
+}
+
+// ---------- Local analysis (0 đồng) ----------
+function localAnalyze(){
+  const c=baseCanvas();
+  const {g,w,h}=grayData(c);
+  const N=w*h;
+
+  // 1) contrast (std dev)
+  let sum=0; for(let i=0;i<N;i++) sum+=g[i];
+  const mean=sum/N;
+  let varr=0; for(let i=0;i<N;i++) varr+=(g[i]-mean)**2;
+  const std=Math.sqrt(varr/N);
+
+  // 2) dark region %
+  let dark=0; for(let i=0;i<N;i++) if(g[i]<55) dark++;
+  const darkPct=100*dark/N;
+
+  // 3) edge ratio
+  const edgeC=sobel(c);
+  const edgeRatio=edgeC._edgeRatio*100;
+
+  // 4) KHOANH VÙNG THÔNG MINH — connected components trên mặt nạ mật độ cao
+  const detections=connectedBlobs(g,w,h);
+
+  // 5) PHÁT HIỆN CẤU TRÚC BẤT THƯỜNG (vách đôi / khoang rỗng / đối xứng)
+  const structure=structureAnalysis(g,w,h);
+
+  // 6) risk score tổng hợp
+  let risk = Math.round(
+    darkPct*1.4 +
+    (std<28?12:0) +
+    detections.length*5 +
+    (detections[0]?detections[0].density/255*15:0) +
+    structure.riskAdd
+  );
+  risk=Math.min(100,Math.max(0,risk));
+
+  localStats={
+    contrast:Math.round(std),
+    darkPct:+darkPct.toFixed(1),
+    edgeRatio:+edgeRatio.toFixed(1),
+    risk,
+    detections,
+    structure,
+    dims:{w,h}
+  };
+  renderLocal();
+  return localStats;
+}
+
+// ---- Connected-component blob detection (gom vùng đậm liền kề thành khối thật) ----
+function connectedBlobs(g,w,h){
+  const thr=60;                 // ngưỡng "đậm"
+  const mask=new Uint8Array(w*h);
+  for(let i=0;i<w*h;i++) mask[i]=g[i]<thr?1:0;
+  const labels=new Int32Array(w*h).fill(0);
+  const blobs=[];
+  const stack=new Int32Array(w*h);
+  let lab=0;
+  for(let start=0;start<w*h;start++){
+    if(!mask[start]||labels[start]) continue;
+    lab++;
+    let sp=0; stack[sp++]=start; labels[start]=lab;
+    let minx=w,miny=h,maxx=0,maxy=0,area=0,dsum=0;
+    while(sp>0){
+      const p=stack[--sp];
+      const x=p%w, y=(p-x)/w;
+      area++; dsum+=255-g[p];
+      if(x<minx)minx=x; if(x>maxx)maxx=x; if(y<miny)miny=y; if(y>maxy)maxy=y;
+      // 4 hướng
+      const nb=[p-1,p+1,p-w,p+w];
+      const nx=[x-1,x+1,x,x];
+      const ny=[y,y,y-1,y+1];
+      for(let k=0;k<4;k++){
+        if(nx[k]<0||nx[k]>=w||ny[k]<0||ny[k]>=h) continue;
+        const q=nb[k];
+        if(mask[q]&&!labels[q]){ labels[q]=lab; stack[sp++]=q; }
+      }
+    }
+    const areaPct=100*area/(w*h);
+    if(areaPct<0.25) continue;   // bỏ nhiễu nhỏ
+    const bw=maxx-minx+1, bh=maxy-miny+1;
+    const fill=area/(bw*bh);      // độ đặc của khối trong bounding box
+    const cx=(minx+maxx)/2, cy=(miny+maxy)/2;
+    const zone=(cy<h/2?'trên':'dưới')+'-'+(cx<w/3?'trái':cx<2*w/3?'giữa':'phải');
+    blobs.push({
+      zone,
+      area_percent:+areaPct.toFixed(1),
+      density:Math.round(dsum/area),
+      fill:+fill.toFixed(2),
+      box:[minx,miny,bw,bh],
+      shape: fill>0.8?'khối đặc':(bw>bh*3?'dải ngang':bh>bw*3?'dải dọc':'cụm rời'),
+      label:'Khối mật độ cao'
+    });
+  }
+  blobs.sort((a,b)=>(b.density*b.area_percent)-(a.density*a.area_percent));
+  return blobs.slice(0,8);
+}
+
+// ---- Structure: đối xứng, vách đôi, khoang rỗng ----
+function structureAnalysis(g,w,h){
+  const notes=[]; let riskAdd=0;
+  // cột mật độ trung bình (255 - xám → càng cao càng đậm)
+  const col=new Float32Array(w);
+  for(let x=0;x<w;x++){let s=0;for(let y=0;y<h;y++)s+=255-g[y*w+x];col[x]=s/h;}
+  const row=new Float32Array(h);
+  for(let y=0;y<h;y++){let s=0;for(let x=0;x<w;x++)s+=255-g[y*w+x];row[y]=s/w;}
+
+  // 1) Đối xứng trái-phải
+  let asym=0,base=0;
+  for(let x=0;x<Math.floor(w/2);x++){asym+=Math.abs(col[x]-col[w-1-x]);base+=col[x]+col[w-1-x];}
+  const asymPct=base>0?100*asym/base:0;
+  if(asymPct>35){ notes.push('Bất đối xứng trái-phải cao ('+asymPct.toFixed(0)+'%) — hàng chất lệch một bên, cần lưu ý khoang trống đối diện.'); riskAdd+=6; }
+
+  // 2) Vách đôi: dải mật độ cao đều dọc sát 2 mép (biên container)
+  const edgeBand=Math.max(3,Math.floor(w*0.06));
+  let leftBand=0,rightBand=0,center=0,cc=0;
+  for(let x=0;x<edgeBand;x++) leftBand+=col[x];
+  for(let x=w-edgeBand;x<w;x++) rightBand+=col[x];
+  for(let x=edgeBand;x<w-edgeBand;x++){center+=col[x];cc++;}
+  leftBand/=edgeBand; rightBand/=edgeBand; center/=cc;
+  if(leftBand>center*1.6||rightBand>center*1.6){
+    notes.push('Dải mật độ cao bám sát mép '+(leftBand>rightBand?'trái':'phải')+' — nghi vấn vách/thành giả (double wall).');
+    riskAdd+=10;
+  }
+
+  // 3) Khoang rỗng bất thường: vùng lớn mật độ rất thấp giữa hàng đậm
+  let lowRun=0,maxLowRun=0;
+  const colMean=col.reduce((a,b)=>a+b,0)/w;
+  for(let x=0;x<w;x++){ if(col[x]<colMean*0.35){lowRun++;maxLowRun=Math.max(maxLowRun,lowRun);}else lowRun=0; }
+  const lowRunPct=100*maxLowRun/w;
+  if(lowRunPct>18 && colMean>40){
+    notes.push('Khoang rỗng kéo dài ('+lowRunPct.toFixed(0)+'% chiều ngang) xen giữa hàng — có thể là khoang giấu hoặc xếp hàng không đều.');
+    riskAdd+=5;
+  }
+
+  // 4) Phân tầng đều bất thường (hàng giấu xếp lớp)
+  let rowJumps=0;
+  for(let y=1;y<h;y++) if(Math.abs(row[y]-row[y-1])>colMean*0.5) rowJumps++;
+  const layered=rowJumps>h*0.12;
+  if(layered){ notes.push('Nhiều lớp mật độ xen kẽ theo chiều dọc — hàng xếp nhiều tầng, soi kỹ ranh giới các lớp.'); riskAdd+=3; }
+
+  return {asymPct:+asymPct.toFixed(0), notes, riskAdd, col:Array.from(col).filter((_,i)=>i%Math.ceil(w/60)===0)};
+}
+
+function renderLocal(){
+  if(!localStats) return;
+  $('stContrast').textContent=localStats.contrast;
+  $('stDark').textContent=localStats.darkPct+'%';
+  $('stEdge').textContent=localStats.edgeRatio+'%';
+  $('riskNum').textContent=localStats.risk;
+  const f=$('riskFill');
+  f.style.width=localStats.risk+'%';
+  f.style.background=localStats.risk>=60?'var(--err)':localStats.risk>=30?'var(--warn)':'var(--ok)';
+  let html='';
+  // Khối phát hiện (đã là vùng liền kề thật, không còn ô lưới)
+  if(!localStats.detections.length){
+    html+='<div class="det">Không phát hiện khối mật độ bất thường rõ.</div>';
+  }else{
+    localStats.detections.forEach((d,i)=>{
+      html+=`<div class="det"><b>${i+1}. ${d.label} (${d.shape})</b> — vị trí: ${d.zone} · mật độ: ${d.density}/255 · ~${d.area_percent}% khung hình · độ đặc ${Math.round(d.fill*100)}%</div>`;
+    });
+  }
+  // Cảnh báo cấu trúc
+  const s=localStats.structure;
+  if(s && s.notes.length){
+    html+='<div style="margin-top:8px;font-size:12px;color:#ffb020;font-weight:bold">⚠️ DẤU HIỆU CẤU TRÚC BẤT THƯỜNG:</div>';
+    s.notes.forEach(n=>{ html+=`<div class="det" style="border-color:#b06400">• ${n}</div>`; });
+  }
+  $('localDetections').innerHTML=html;
+}
+
+// ---------- Gemini Free API ----------
+async function listModels(key,force){
+  // Luôn hỏi Google danh sách model thật (tránh dùng tên model đã bị gỡ).
+  // Cache 6 giờ để đỡ gọi lại liên tục, nhưng tự làm mới sau đó.
+  const cached=localStorage.getItem('gm_models');
+  const cachedAt=+(localStorage.getItem('gm_models_at')||0);
+  const fresh=Date.now()-cachedAt < 6*3600*1000;
+  if(!force && cached && fresh){
+    try{ const m=JSON.parse(cached); if(m.length) return m; }catch(e){}
+  }
+  const r=await fetchT('https://generativelanguage.googleapis.com/v1beta/models?key='+encodeURIComponent(key));
+  const d=await r.json();
+  if(d.error) throw new Error(d.error.message);
+  const models=(d.models||[]).filter(m=>(m.supportedGenerationMethods||[]).includes('generateContent')).map(m=>m.name.replace('models/',''));
+  localStorage.setItem('gm_models',JSON.stringify(models));
+  localStorage.setItem('gm_models_at',Date.now());
+  return models;
+}
+
+function buildModelQueue(models){
+  // Chống lỗi thời: KHÔNG hardcode tên model cụ thể (Google đổi/gỡ liên tục).
+  // Lấy động từ danh sách model thật mà key này đang được phép dùng, ưu tiên flash mới nhất.
+  const usable=models.filter(m=>
+    !/embedding|imagen|tts|image|veo|lyria|aqa|learnlm/i.test(m)
+  );
+  // tách nhóm flash-lite / flash / còn lại; trong mỗi nhóm sắp version giảm dần
+  const verNum=m=>{
+    const x=m.match(/(\d+)\.(\d+)/); // vd 3.5, 2.5
+    return x? parseFloat(x[1]+'.'+x[2]) : 0;
+  };
+  const flashLite=usable.filter(m=>/flash.?lite/i.test(m)).sort((a,b)=>verNum(b)-verNum(a));
+  const flash=usable.filter(m=>/flash/i.test(m)&&!/flash.?lite/i.test(m)).sort((a,b)=>verNum(b)-verNum(a));
+  const rest=usable.filter(m=>!/flash/i.test(m)).sort((a,b)=>verNum(b)-verNum(a));
+  // ưu tiên: flash-lite (quota free cao nhất) → flash → khác
+  const queue=[];
+  [...flashLite,...flash,...rest].forEach(m=>{ if(!queue.includes(m)) queue.push(m); });
+  return queue;
+}
+
+function isQuotaError(msg){
+  return /quota|rate.?limit|429|resource.?exhausted|exceeded/i.test(msg||'');
+}
+function isDeadModel(msg){
+  return /no longer available|not found|404|not supported|deprecated|has been deprecated/i.test(msg||'');
+}
+
+// fetch có timeout — tránh treo vô hạn khi server không phản hồi
+async function fetchT(url,options={},ms=45000){
+  const ctrl=new AbortController();
+  const timer=setTimeout(()=>ctrl.abort(),ms);
+  try{
+    return await fetch(url,{...options,signal:ctrl.signal});
+  }catch(e){
+    if(e.name==='AbortError') throw new Error('Timeout '+Math.round(ms/1000)+'s — server không phản hồi');
+    throw e;
+  }finally{ clearTimeout(timer); }
+}
+
+function localConclusion(stats,manifest){
+  const L=[];
+  const risk=stats.risk;
+  // 1. Mô tả kỹ thuật
+  L.push('1. ĐÁNH GIÁ KỸ THUẬT ẢNH:');
+  if(stats.contrast<25) L.push('- Độ tương phản thấp ('+stats.contrast+') — ảnh mờ hoặc hàng đồng nhất; nên tăng tương phản/sắc nét rồi soi lại.');
+  else if(stats.contrast>70) L.push('- Độ tương phản cao ('+stats.contrast+') — hàng hóa đa dạng vật liệu, ranh giới rõ.');
+  else L.push('- Độ tương phản trung bình ('+stats.contrast+') — chất lượng ảnh đạt yêu cầu phân tích.');
+  L.push('- Tỉ lệ viền vật thể: '+stats.edgeRatio+'% — '+(stats.edgeRatio>8?'hàng xếp dày, nhiều lớp.':stats.edgeRatio>3?'mật độ xếp hàng trung bình.':'ít vật thể / khoang khá trống.'));
+  // 2. Vùng mật độ cao (khối liền kề thật)
+  L.push('');
+  L.push('2. VÙNG MẬT ĐỘ CAO (khối liền kề — nghi kim loại đặc/che chắn):');
+  if(!stats.detections.length){
+    L.push('- Không phát hiện khối mật độ bất thường. Phân bố vật liệu tương đối đồng đều.');
+  }else{
+    L.push('- Tổng '+stats.darkPct+'% diện tích ảnh có mật độ rất cao; phát hiện '+stats.detections.length+' khối riêng biệt.');
+    stats.detections.slice(0,5).forEach((d,i)=>{
+      L.push('- Khối '+(i+1)+': '+d.shape+' tại '+d.zone+', mật độ '+d.density+'/255, ~'+d.area_percent+'% khung, độ đặc '+Math.round(d.fill*100)+'%'+
+        (d.fill>0.85&&d.density>200?' → rất đặc & nặng, lưu ý kim loại khối.':''));
+    });
+  }
+  // 2b. Cấu trúc bất thường
+  if(stats.structure && stats.structure.notes.length){
+    L.push('');
+    L.push('2b. CẤU TRÚC BẤT THƯỜNG:');
+    stats.structure.notes.forEach(n=>L.push('- ⚠️ '+n));
+  }
+  // 3. Đối chiếu manifest nhiều mặt hàng + HS
+  L.push('');
+  L.push('3. ĐỐI CHIẾU MANIFEST:');
+  if(!manifest){
+    L.push('- Chưa nhập manifest — không thể đối chiếu tự động. Đề nghị nhập tên hàng để hệ thống so khớp.');
+  }else{
+    const mm=matchManifest(manifest,stats);
+    mm.forEach(line=>L.push('- '+line));
+  }
+  // 4. Kết luận
+  L.push('');
+  L.push('4. RISK SCORE (hệ thống): '+risk+'/100');
+  L.push('5. KHUYẾN NGHỊ: '+(risk>=60?'KIỂM TRA THỰC TẾ — nhiều dấu hiệu mật độ/cấu trúc bất thường.':risk>=30?'SOI KỸ LẠI các vùng khoanh màu (tab Ảnh soi → Khoanh vùng); cân nhắc kiểm tra thực tế nếu manifest không giải thích được.':'THÔNG QUAN — không thấy dấu hiệu bất thường đáng kể.'));
+  L.push('');
+  L.push('(Kết luận sinh tự động từ phân tích kỹ thuật tại máy — mang tính hỗ trợ tham khảo.)');
+  return L.join('\n');
+}
+
+// Đối chiếu manifest: nhận nhiều dòng hàng + mã HS, map nhóm HS → mật độ kỳ vọng
+function matchManifest(manifest,stats){
+  const out=[];
+  const mf=manifest.toLowerCase();
+  // Bảng nhóm HS 2 số đầu → đặc trưng mật độ kỳ vọng
+  const hsGroups=[
+    {re:/\b(7[2-9]|8[0-3])\d{0,6}\b/,name:'HS 72-83 (kim loại & sản phẩm kim loại)',expect:'heavy'},
+    {re:/\b(84|85)\d{0,6}\b/,name:'HS 84-85 (máy móc, thiết bị điện)',expect:'heavy'},
+    {re:/\b(86|87|88|89)\d{0,6}\b/,name:'HS 86-89 (phương tiện vận tải)',expect:'heavy'},
+    {re:/\b(50|51|52|53|54|55|56|57|58|59|60|61|62|63)\d{0,6}\b/,name:'HS 50-63 (dệt may)',expect:'light'},
+    {re:/\b(44|45|46|47|48|49)\d{0,6}\b/,name:'HS 44-49 (gỗ, giấy)',expect:'light'},
+    {re:/\b(39|40)\d{0,6}\b/,name:'HS 39-40 (nhựa, cao su)',expect:'light'},
+    {re:/\b(0[1-9]|1[0-9]|2[0-4])\d{0,6}\b/,name:'HS 01-24 (nông sản, thực phẩm)',expect:'light'},
+    {re:/\b(28|29|30|31|32|33|34|35|36|37|38)\d{0,6}\b/,name:'HS 28-38 (hóa chất)',expect:'mixed'},
+  ];
+  const foundHS=hsGroups.filter(h=>h.re.test(mf));
+  if(foundHS.length){
+    out.push('Mã HS nhận diện: '+foundHS.map(h=>h.name).join('; ')+'.');
+  }
+  // Từ khóa tên hàng
+  const heavyKw=/máy|thép|sắt|kim loại|inox|nhôm|đồng|thiết bị|động cơ|phụ tùng|khuôn|cơ khí|ống|cuộn|tôn|xe|linh kiện/i.test(mf);
+  const lightKw=/vải|dệt|may|quần áo|giấy|nhựa|mút|xốp|gỗ|nông sản|gạo|cà phê|hạt|thực phẩm|bánh|đồ chơi|bông|sợi/i.test(mf);
+  const expectHeavy = heavyKw || foundHS.some(h=>h.expect==='heavy');
+  const expectLight = lightKw || foundHS.some(h=>h.expect==='light');
+
+  // Đối chiếu với mật độ ảnh
+  if(expectHeavy && expectLight){
+    out.push('Lô hàng hỗn hợp (có cả nhóm nặng và nhẹ) — đối chiếu từng khoang, khó kết luận tự động toàn cục.');
+  }else if(stats.darkPct>20 && expectLight && !expectHeavy){
+    out.push('⚠️ MÂU THUẪN: khai hàng nhẹ/hữu cơ nhưng ảnh có '+stats.darkPct+'% vùng mật độ kim loại — nghi vấn khai sai/giấu hàng nặng.');
+  }else if(stats.darkPct>20 && expectHeavy){
+    out.push('Phù hợp: khai hàng kim loại/máy móc, ảnh thể hiện đúng đặc trưng mật độ cao.');
+  }else if(stats.darkPct<=8 && expectHeavy){
+    out.push('⚠️ LƯU Ý: khai hàng kim loại/máy móc nhưng ảnh ít vùng mật độ cao ('+stats.darkPct+'%) — kiểm tra thiếu hàng/khai khống.');
+  }else if(!expectHeavy && !expectLight && !foundHS.length){
+    out.push('Không nhận diện được nhóm hàng từ mô tả — nhập rõ tên hàng hoặc mã HS để đối chiếu chính xác hơn.');
+  }else{
+    out.push('Không phát hiện mâu thuẫn rõ giữa đặc trưng mật độ ảnh và khai báo.');
+  }
+  // Cảnh báo cấu trúc liên hệ manifest
+  if(stats.structure && /vách|thành giả/i.test(stats.structure.notes.join(' ')) && expectLight){
+    out.push('⚠️ Đặc biệt lưu ý: nghi vấn vách giả trên lô hàng khai nhẹ — rủi ro giấu hàng cấm trong thành container.');
+  }
+  return out;
+}
+
+
+function buildPrompt(manifest,stats){
+  const structTxt = stats.structure&&stats.structure.notes.length? '\n- Cấu trúc bất thường: '+stats.structure.notes.join(' | ') : '';
+  return `Bạn là chuyên gia phân tích hình ảnh soi chiếu X-ray container của Hải quan Việt Nam.
+
+THÔNG TIN TỜ KHAI/MANIFEST:
+${manifest||'(không có)'}
+
+SỐ LIỆU PHÂN TÍCH KỸ THUẬT TẠI MÁY:
+- Độ tương phản ảnh: ${stats.contrast}
+- Tỉ lệ vùng mật độ rất cao (đậm): ${stats.darkPct}%
+- Tỉ lệ viền vật thể: ${stats.edgeRatio}%
+- Số khối mật độ cao (đã gom liền kề): ${stats.detections.length}${structTxt}
+
+NHIỆM VỤ — trả lời NGẮN GỌN bằng tiếng Việt theo đúng cấu trúc:
+1. MÔ TẢ HÀNG HÓA TRONG ẢNH: (bố cục, loại vật thể, cách sắp xếp)
+2. ĐỐI CHIẾU MANIFEST: (hàng trong ảnh có phù hợp khai báo không?)
+3. DẤU HIỆU NGHI VẤN: (vách đôi, khoang rỗng bất thường, khối kim loại lạ, hàng giấu lẫn, mật độ không đồng nhất...)
+4. RISK SCORE: (số 0-100)
+5. KHUYẾN NGHỊ: (THÔNG QUAN / KIỂM TRA THỰC TẾ / SOI LẠI GÓC KHÁC — kèm lý do 1 câu)
+
+Lưu ý: đây là ảnh X-ray nên màu sắc thể hiện vật liệu (cam=hữu cơ, xanh/đen=kim loại). Chỉ nêu nhận định có căn cứ từ ảnh.`;
+}
+
+// ---- Provider 1: Gemini ----
+async function callGeminiWithModel(key,model,imgB64,manifest,stats){
+  lastModel='Gemini/'+model;
+  const prompt=buildPrompt(manifest,stats);
+
+  const body={
+    contents:[{parts:[
+      {text:prompt},
+      {inline_data:{mime_type:'image/jpeg',data:imgB64}}
+    ]}],
+    generationConfig:{temperature:0.2,maxOutputTokens:1000}
+  };
+  const r=await fetchT(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`,{
+    method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)
+  });
+  const d=await r.json();
+  if(d.error) throw new Error(d.error.message);
+  const txt=(d.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('');
+  if(!txt) throw new Error('AI không trả về nội dung (có thể ảnh bị chặn hoặc hết quota).');
+  return txt;
+}
+
+// Gọi Gemini với hàng đợi model
+async function tryGemini(key,imgB64,manifest,stats,onStatus){
+  let models=await listModels(key);
+  if(!models.length) throw new Error('Không lấy được danh sách model Gemini.');
+  let queue=buildModelQueue(models).slice(0,8);
+  const errors=[];
+  let refreshed=false;
+  for(let i=0;i<queue.length;i++){
+    const model=queue[i];
+    if(onStatus) onStatus(`🧠 [Gemini] thử model ${i+1}/${queue.length}: ${model}...`);
+    try{
+      return await callGeminiWithModel(key,model,imgB64,manifest,stats);
+    }catch(e){
+      errors.push(model+': '+e.message.slice(0,60));
+      // Model đã bị gỡ → làm mới danh sách 1 lần rồi thử tiếp
+      if(isDeadModel(e.message) && !refreshed){
+        refreshed=true;
+        try{ models=await listModels(key,true); queue=buildModelQueue(models).slice(0,8); i=-1; continue; }catch(_){}
+      }
+      // hết quota hoặc model chết → thử model kế tiếp (KHÔNG dừng)
+      if(isQuotaError(e.message)||isDeadModel(e.message)) continue;
+      // lỗi khác (key/ảnh) sau vài lần thì bỏ sang provider khác
+      if(i>=2) throw new Error(errors.slice(0,5).join(' | '));
+    }
+  }
+  throw new Error('Gemini thất bại: '+errors.slice(0,5).join(' | '));
+}
+
+// ---- Provider 2: Groq (OpenAI-compatible, có vision) ----
+async function tryGroq(key,imgB64,manifest,stats,onStatus){
+  const models=['meta-llama/llama-4-scout-17b-16e-instruct','meta-llama/llama-4-maverick-17b-128e-instruct'];
+  const errors=[];
+  for(let i=0;i<models.length;i++){
+    const model=models[i];
+    if(onStatus) onStatus(`🧠 [Groq] thử model ${i+1}/${models.length}: ${model.split('/').pop()}...`);
+    try{
+      const r=await fetchT('https://api.groq.com/openai/v1/chat/completions',{
+        method:'POST',
+        headers:{'Content-Type':'application/json',Authorization:'Bearer '+key},
+        body:JSON.stringify({
+          model,
+          messages:[{role:'user',content:[
+            {type:'text',text:buildPrompt(manifest,stats)},
+            {type:'image_url',image_url:{url:'data:image/jpeg;base64,'+imgB64}}
+          ]}],
+          temperature:0.2,max_tokens:1000
+        })
+      });
+      const d=await r.json();
+      if(d.error) throw new Error(d.error.message||JSON.stringify(d.error));
+      const txt=d.choices?.[0]?.message?.content;
+      if(!txt) throw new Error('Groq không trả về nội dung.');
+      lastModel='Groq/'+model.split('/').pop();
+      return txt;
+    }catch(e){ errors.push(model.split('/').pop()+': '+e.message.slice(0,70)); }
+  }
+  throw new Error('Groq thất bại: '+errors.join(' | '));
+}
+
+// ---- Provider 3: OpenRouter (model free có vision) ----
+async function tryOpenRouter(key,imgB64,manifest,stats,onStatus){
+  const models=['google/gemma-3-27b-it:free','qwen/qwen2.5-vl-72b-instruct:free','meta-llama/llama-4-maverick:free'];
+  const errors=[];
+  for(let i=0;i<models.length;i++){
+    const model=models[i];
+    if(onStatus) onStatus(`🧠 [OpenRouter] thử model ${i+1}/${models.length}: ${model.split('/').pop()}...`);
+    try{
+      const r=await fetchT('https://openrouter.ai/api/v1/chat/completions',{
+        method:'POST',
+        headers:{'Content-Type':'application/json',Authorization:'Bearer '+key},
+        body:JSON.stringify({
+          model,
+          messages:[{role:'user',content:[
+            {type:'text',text:buildPrompt(manifest,stats)},
+            {type:'image_url',image_url:{url:'data:image/jpeg;base64,'+imgB64}}
+          ]}],
+          temperature:0.2,max_tokens:1000
+        })
+      });
+      const d=await r.json();
+      if(d.error) throw new Error(d.error.message||JSON.stringify(d.error));
+      const txt=d.choices?.[0]?.message?.content;
+      if(!txt) throw new Error('OpenRouter không trả về nội dung.');
+      lastModel='OpenRouter/'+model.split('/').pop();
+      return txt;
+    }catch(e){ errors.push(model.split('/').pop()+': '+e.message.slice(0,70)); }
+  }
+  throw new Error('OpenRouter thất bại: '+errors.join(' | '));
+}
+
+// ---- Provider 4: Pollinations (KHÔNG cần key) ----
+async function tryPollinations(imgB64,manifest,stats,onStatus){
+  const attempts=[
+    {url:'https://text.pollinations.ai/openai',models:['openai','openai-large','gemini','mistral']},
+    {url:'https://gen.pollinations.ai/v1/chat/completions',models:['openai','gemini']}
+  ];
+  const errors=[];
+  for(const ep of attempts){
+    for(const model of ep.models){
+      if(onStatus) onStatus(`🧠 [Pollinations · không cần key] thử ${model}...`);
+      try{
+        const r=await fetchT(ep.url,{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({
+            model,
+            messages:[{role:'user',content:[
+              {type:'text',text:buildPrompt(manifest,stats)},
+              {type:'image_url',image_url:{url:'data:image/jpeg;base64,'+imgB64}}
+            ]}],
+            temperature:0.2,max_tokens:1000
+          })
+        });
+        if(!r.ok){errors.push(model+': HTTP '+r.status);continue}
+        const d=await r.json();
+        if(d.error){errors.push(model+': '+(d.error.message||JSON.stringify(d.error)).slice(0,60));continue}
+        const txt=d.choices?.[0]?.message?.content;
+        if(!txt){errors.push(model+': trống');continue}
+        lastModel='Pollinations/'+model;
+        return txt;
+      }catch(e){ errors.push(model+': '+e.message.slice(0,60)); }
+    }
+  }
+  throw new Error('Pollinations thất bại: '+errors.slice(0,5).join(' | '));
+}
+
+// ---- Orchestrator: Gemini → Groq → OpenRouter → Pollinations (no key) ----
+async function callGemini(imgB64,manifest,stats,onStatus){
+  const gm=localStorage.getItem('gm_key');
+  const gq=localStorage.getItem('groq_key');
+  const or=localStorage.getItem('or_key');
+  const providers=[];
+  if(gm) providers.push({name:'Gemini',fn:()=>tryGemini(gm,imgB64,manifest,stats,onStatus)});
+  if(gq) providers.push({name:'Groq',fn:()=>tryGroq(gq,imgB64,manifest,stats,onStatus)});
+  if(or) providers.push({name:'OpenRouter',fn:()=>tryOpenRouter(or,imgB64,manifest,stats,onStatus)});
+  // Pollinations luôn có mặt — không cần key
+  providers.push({name:'Pollinations',fn:()=>tryPollinations(imgB64,manifest,stats,onStatus)});
+  const errors=[];
+  for(const p of providers){
+    try{ return await p.fn(); }
+    catch(e){
+      errors.push('['+p.name+'] '+e.message.slice(0,140));
+      if(onStatus) onStatus('⚠️ '+p.name+' lỗi → chuyển provider kế tiếp...');
+    }
+  }
+  throw new Error('Tất cả provider đều thất bại:\n\n• '+errors.join('\n• ')+
+    '\n\n💡 Gợi ý:\n- Gemini "denied access": lỗi phía Google, tạo key bằng Google account KHÁC\n- Kiểm tra kết nối mạng (mạng nội bộ có thể chặn) — thử phát 4G từ điện thoại');
+}
+
+// ---------- Main analyze ----------
+async function analyzeAll(){
+  if(!origImg){alert('Chưa chọn ảnh X-ray');go(2);return}
+  go(3);
+  // 1) Phân tích tại máy — luôn chạy, 0 mạng
+  const stats=localAnalyze();
+
+  const out=$('aiOut');
+  // 2) Kết luận rule-based — luôn hiển thị, không gửi ảnh đi đâu
+  const ruleTxt=localConclusion(stats,getManifest());
+  lastAI=ruleTxt; lastModel='Tại máy (rule-based)';
+  const cls0=stats.risk>=60?'r':stats.risk>=30?'y':'g';
+  const ruleHtml='<div class="result '+(stats.risk>=60?'bad':stats.risk>=30?'mid':'good')+'">'+
+    '<span class="badge '+cls0+'">Risk: '+stats.risk+'/100</span><span class="badge g">🔒 Phân tích tại máy — ảnh không rời thiết bị</span><br><br>'+
+    escapeHtml(ruleTxt)+'</div>';
+
+  // 3) Nếu BẬT riêng tư → dừng ở đây, không gọi AI ngoài
+  if(isPrivacy()){
+    out.innerHTML=ruleHtml+
+      '<div class="result mid">🔒 Chế độ riêng tư đang BẬT — không gửi ảnh ra ngoài.\n'+
+      'Nếu ảnh này KHÔNG nhạy cảm và bạn muốn AI mô tả chi tiết hơn, bấm nút bên dưới.</div>'+
+      '<button class="warn" onclick="cloudAI()">🌐 Bật AI đám mây cho riêng ảnh này</button>';
+    saveHistory(stats,ruleTxt);
+    return;
+  }
+  // 4) Riêng tư TẮT → gọi AI luôn
+  await cloudAI(ruleHtml);
+}
+
+// Gọi AI đám mây (chỉ khi người dùng chủ động hoặc đã tắt riêng tư)
+async function cloudAI(ruleHtml){
+  if(!origImg) return;
+  const stats=localStats;
+  const out=$('aiOut');
+  ruleHtml = ruleHtml || (
+    '<div class="result '+(stats.risk>=60?'bad':stats.risk>=30?'mid':'good')+'">'+
+    '<span class="badge g">🔒 Phân tích tại máy</span><br><br>'+escapeHtml(localConclusion(stats,getManifest()))+'</div>');
+  out.innerHTML=ruleHtml+'<div class="result" id="aiCloud">🌐 Đang gửi ảnh tới AI đám mây...</div>';
+  try{
+    const b64=$('cv').toDataURL('image/jpeg',0.9).split(',')[1];
+    const txt=await callGemini(b64,getManifest(),stats,
+      msg=>{ const s=$('aiCloud'); if(s) s.innerHTML=escapeHtml(msg); });
+    const m=txt.match(/RISK\s*SCORE[^0-9]*(\d{1,3})/i);
+    const aiRisk=m?Math.min(100,+m[1]):null;
+    let badge='<span class="badge g">Nguồn: '+escapeHtml(lastModel)+'</span>';
+    if(aiRisk!==null){
+      const cls=aiRisk>=60?'r':aiRisk>=30?'y':'g';
+      badge='<span class="badge '+cls+'">AI Risk: '+aiRisk+'/100</span>'+badge;
+    }
+    lastAI=localConclusion(stats,getManifest())+'\n\n===== AI ĐÁM MÂY ('+lastModel+') =====\n'+txt;
+    out.innerHTML=ruleHtml+'<div class="result good">'+badge+'<br><br>'+escapeHtml(txt)+'</div>';
+    saveHistory(stats,lastAI);
+  }catch(e){
+    out.innerHTML=ruleHtml+'<div class="result bad">❌ Lỗi AI đám mây: '+escapeHtml(e.message)+'\n\n✅ Kết luận tại máy phía trên vẫn đầy đủ giá trị.</div>';
+    saveHistory(stats,lastAI);
+  }
+}
+
+function escapeHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+// ---------- Decision + report ----------
+function decide(d){
+  lastDecision=d;
+  $('decideStatus').innerHTML='<div class="result '+(d==='THÔNG QUAN'?'good':'mid')+'">Đã ghi nhận quyết định: <b>'+d+'</b></div>';
+}
+
+function copyReport(){
+  const now=new Date().toLocaleString('vi-VN');
+  const r=[];
+  r.push('===== BÁO CÁO PHÂN TÍCH SOI CHIẾU X-RAY =====');
+  r.push('Thời gian: '+now);
+  const on=localStorage.getItem('off_name'),ou=localStorage.getItem('off_unit');
+  if(on) r.push('Cán bộ: '+on);
+  if(ou) r.push('Đơn vị: '+ou);
+  const cn=$('contNo').value.trim(), dn=$('declNo').value.trim();
+  if(cn) r.push('Số container: '+cn);
+  if(dn) r.push('Số tờ khai: '+dn);
+  const mf=getManifest();
+  if(mf) r.push('\n--- MANIFEST ---\n'+mf);
+  if(localStats){
+    r.push('\n--- PHÂN TÍCH TẠI MÁY ---');
+    r.push('Tương phản: '+localStats.contrast+' | Vùng đậm: '+localStats.darkPct+'% | Viền: '+localStats.edgeRatio+'%');
+    r.push('Risk score (máy): '+localStats.risk+'/100');
+    const rgroups={};
+    localStats.detections.forEach(d=>{
+      if(!rgroups[d.zone]) rgroups[d.zone]={count:0,max:0};
+      rgroups[d.zone].count++; rgroups[d.zone].max=Math.max(rgroups[d.zone].max,d.density);
+    });
+    Object.entries(rgroups).forEach(([zone,g],i)=>r.push((i+1)+'. Khối mật độ rất cao'+(g.count>1?' (×'+g.count+')':'')+' — '+zone+' — mật độ tối đa '+g.max+'/255'));
+  }
+  if(lastAI){
+    r.push('\n--- KẾT QUẢ AI ('+lastModel+') ---\n'+lastAI);
+  }
+  if(lastDecision) r.push('\n--- QUYẾT ĐỊNH CÁN BỘ ---\n'+lastDecision);
+  const note=$('officerNote').value.trim();
+  if(note) r.push('Ghi chú: '+note);
+  r.push('\n(Kết quả AI chỉ mang tính hỗ trợ tham khảo — quyết định cuối cùng thuộc thẩm quyền cán bộ hải quan.)');
+  const text=r.join('\n');
+  navigator.clipboard.writeText(text).then(()=>{
+    $('decideStatus').innerHTML='<div class="result good">📄 Đã copy báo cáo vào clipboard!</div>';
+  }).catch(()=>{
+    // fallback
+    const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();
+    document.execCommand('copy');ta.remove();
+    $('decideStatus').innerHTML='<div class="result good">📄 Đã copy báo cáo!</div>';
+  });
+}
+
+// ---------- History (localStorage) ----------
+function saveHistory(stats,aiText){
+  let h=[];
+  try{h=JSON.parse(localStorage.getItem('v12_hist')||'[]')}catch(e){}
+  h.unshift({
+    t:Date.now(),
+    cont:$('contNo').value.trim(),
+    decl:$('declNo').value.trim(),
+    manifest:getManifest().slice(0,200),
+    risk:stats?stats.risk:null,
+    dark:stats?stats.darkPct:null,
+    ai:aiText?aiText.slice(0,1500):null,
+    model:lastModel||null
+  });
+  if(h.length>100) h=h.slice(0,100); // giữ tối đa 100 bản ghi
+  localStorage.setItem('v12_hist',JSON.stringify(h));
+}
+
+function renderHistory(){
+  let h=[];
+  try{h=JSON.parse(localStorage.getItem('v12_hist')||'[]')}catch(e){}
+  if(!h.length){$('histList').innerHTML='<div class="det">Chưa có lịch sử.</div>';return}
+  $('histList').innerHTML=h.map((x,i)=>{
+    const d=new Date(x.t).toLocaleString('vi-VN');
+    const cls=x.risk>=60?'r':x.risk>=30?'y':'g';
+    return `<div class="hist-item" onclick="showHist(${i})">
+      <span class="badge ${cls}">Risk ${x.risk??'–'}</span>
+      <b>${x.cont||'(không số cont)'}</b> · ${d}<br>
+      <span style="color:#7fa8c9">${x.manifest||''}</span>
+    </div>`;
+  }).join('');
+}
+
+function showHist(i){
+  let h=[];
+  try{h=JSON.parse(localStorage.getItem('v12_hist')||'[]')}catch(e){}
+  const x=h[i]; if(!x) return;
+  alert('Container: '+(x.cont||'–')+'\nTờ khai: '+(x.decl||'–')+'\nRisk: '+(x.risk??'–')+'/100\n\n'+(x.ai||'(không có kết quả AI)'));
+}
+
+function exportHistory(){
+  const data=localStorage.getItem('v12_hist')||'[]';
+  const a=document.createElement('a');
+  a.download='xray_history_'+new Date().toISOString().slice(0,10)+'.json';
+  a.href='data:application/json;charset=utf-8,'+encodeURIComponent(data);
+  a.click();
+}
+
+function clearHistory(){
+  if(confirm('Xóa toàn bộ lịch sử trên máy này?')){
+    localStorage.removeItem('v12_hist');
+    renderHistory();
+  }
+}
+
+</script>
+</body>
+</html>
